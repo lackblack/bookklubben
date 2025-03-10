@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book Club Voting App</title>
+    <style>
+        :root {
+            --primary: #6d4c41;
+            --primary-light: #9c786c;
+            --primary-dark: #40241a;
+            --secondary: #81c784;
+            --light: #f5f5f5;
+            --dark: #333;
+            --shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--light);
+            color: var(--dark);
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background-color: var(--primary);
+            color: white;
+            text-align: center;
+            padding: 1rem;
+            box-shadow: var(--shadow);
+        }
+        
+        nav {
+            display: flex;
+            justify-content: center;
+            background-color: var(--primary-light);
+            padding: 0.5rem;
+        }
+        
+        nav a {
+            color: white;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            margin: 0 0.5rem;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+        
+        nav a:hover {
+            background-color: var(--primary-dark);
+        }
+        
+        nav a.active {
+            background-color: var(--primary-dark);
+        }
+        
+        .card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: var(--shadow);
+        }
+        
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: bold;
+        }
+        
+        input, select, textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+        
+        button {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: var(--primary-dark);
+        }
+        
+        button.secondary {
+            background-color: var(--secondary);
+            color: var(--dark);
+        }
+        
+        button.secondary:hover {
+            background-color: #5da861;
+        }
+        
+        .search-results {
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 10px;
+        }
+        
+        .book-item {
+            display: flex;
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+        }
+        
+        .book-item:hover {
+            background-color: #f9f9f9;
+        }
+        
+        .book-cover {
+            width: 60px;
+            height: 90px;
+            object-fit: cover;
+            margin-right: 15px;
+        }
+        
+        .book-info h3 {
+            margin-bottom: 5px;
+            font-size: 1rem;
+        }
+        
+        .book-info p {
+            color: #666;
+            font-size: 0.9rem;
+            margin: 2px 0;
+        }
+        
+        .selected-books {
+            margin-top: 20px;
+        }
+        
+        .selected-book {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            margin-bottom: 10px;
+            background-color: #f9f9f9;
+            border-radius: 4px;
+            position: relative;
+        }
+        
+        .remove-book {
+            position: absolute;
+            right: 10px;
+            top: 10px;
+            background-color: #f44336;
+            color: white;
+            border: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+        
+        .book-vote-item {
+            display: flex;
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border-radius: 8px;
+        }
+        
+        .vote-info {
+            flex: 1;
+            padding-left: 20px;
+        }
+        
+        .vote-button {
+            background-color: var(--secondary);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        
+        .vote-button.voted {
+            background-color: var(--primary);
+        }
+        
+        .vote-count {
+            display: inline-block;
+            background-color: var(--primary);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 20px;
+            margin-left: 10px;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        #bookSearch {
+            position: relative;
+        }
+        
+        #searchResults {
+            position: absolute;
+            width: 100%;
+            background-color: white;
+            border: 1px solid #ddd;
+            border-top: none;
+            z-index: 10;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .section-title {
+            margin: 30px 0 15px;
+            border-bottom: 2px solid var(--primary-light);
+            padding-bottom: 5px;
+        }
+        
+        .share-link {
+            background-color: #f5f5f5;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+            font-family: monospace;
+            word-break: break-all;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        footer {
+            text-align: center;
+            padding: 20px;
+            margin-top: 40px;
+            background-color: var(--primary-light);
+            color: white;
+        }
+        
+        .book-details {
+            display: flex;
+            margin-top: 15px;
+        }
+        
+        .book-meta {
+            display: flex;
+            gap: 15px;
+            margin-top: 10px;
+        }
+        
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .meta-item svg {
+            width: 16px;
+            height: 16px;
+        }
+        
+        @media (max-width: 768px) {
+            .book-details {
+                flex-direction: column;
+            }
+            .book-vote-item {
+                flex-direction: column;
+            }
+            .vote-info {
+                padding-left: 0;
+                padding-top: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Book Club Voting</h1>
+    </header>
+    
+    <nav>
+        <a href="#" class="nav-link active" data-tab="create">Create Vote</a>
+        <a href="#" class="nav-link" data-tab="vote">Vote</a>
+        <a href="#" class="nav-link" data-tab="results">Results</a>
+    </nav>
+    
+    <div class="container">
+        <!-- Create Vote Tab -->
+        <div class="tab-content active" id="create">
+            <div class="card">
+                <h2>Create a New Vote</h2>
+                <p>Search for books and add them to your voting list.</p>
+                
+                <div class="form-group">
+                    <label for="voteName">Vote Name</label>
+                    <input type="text" id="voteName" placeholder="April Book Club Selection">
+                </div>
+                
+                <div class="form-group" id="bookSearch">
+                    <label for="bookQuery">Search for Books</label>
+                    <input type="text" id="bookQuery" placeholder="Enter book title, author or ISBN">
+                    <button onclick="searchBooks()" class="secondary">Search</button>
+                    
+                    <div id="searchResults" class="search-results hidden"></div>
+                </div>
+                
+                <h3 class="section-title">Selected Books</h3>
+                <div id="selectedBooks" class="selected-books">
+                    <p>No books selected yet. Search and add books above.</p>
+                </div>
+                
+                <h3 class="section-title">Vote Settings</h3>
+                <div class="form-group">
+                    <label for="voteDeadline">Voting Deadline</label>
+                    <input type="datetime-local" id="voteDeadline">
+                </div>
+                
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="hideResults"> 
+                        Hide results until deadline
+                    </label>
+                </div>
+                
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="allowMultipleVotes"> 
+                        Allow multiple votes per person
+                    </label>
+                </div>
+                
+                <button onclick="createVote()">Create Vote</button>
+                
+                <div id="voteCreatedMessage" class="hidden">
+                    <h3 class="section-title">Vote Created!</h3>
+                    <p>Share this link with your book club members:</p>
+                    <div class="share-link" id="voteLink">https://bookclub.app/vote/abc123</div>
+                    <button onclick="copyVoteLink()" class="secondary">Copy Link</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Vote Tab -->
+        <div class="tab-content" id="vote">
+            <div class="card">
+                <h2 id="voteTitle">April Book Club Selection</h2>
+                <p>Vote for the book you'd like to read next. Select one option below.</p>
+                
+                <div id="voteBooks">
+                    <!-- Book voting options will be loaded here -->
+                </div>
+                
+                <button onclick="submitVote()">Submit Your Vote</button>
+                
+                <div id="voteSubmittedMessage" class="hidden">
+                    <h3>Thank you for voting!</h3>
+                    <p>Your vote has been recorded. The host will announce the winning book after the deadline.</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Results Tab -->
+        <div class="tab-content" id="results">
+            <div class="card">
+                <h2>Voting Results</h2>
+                <p>Here are the current results for your book club vote.</p>
+                
+                <div id="voteResults">
+                    <!-- Results will be loaded here -->
+                </div>
+                
+                <button onclick="finalizeVote()" class="secondary">Finalize Vote & Announce Winner</button>
+            </div>
+        </div>
+    </div>
+    
+    <footer>
+        <p>Book Club Voting App &copy; 2025</p>
+    </footer>
+
+    <script>
+        // Sample data for demonstration
+        const mockBooks = [
+            {
+                id: "1",
+                title: "The Midnight Library",
+                author: "Matt Haig",
+                cover: "https://via.placeholder.com/128x192",
+                pages: 304,
+                audioLength: "8 hours 50 minutes",
+                goodreadsLink: "https://www.goodreads.com/book/show/52578297-the-midnight-library",
+                description: "Between life and death there is a library, and within that library, the shelves go on forever. Every book provides a chance to try another life you could have lived."
+            },
+            {
+                id: "2",
+                title: "Project Hail Mary",
+                author: "Andy Weir",
+                cover: "https://via.placeholder.com/128x192",
+                pages: 496,
+                audioLength: "16 hours 10 minutes",
+                goodreadsLink: "https://www.goodreads.com/book/show/54493401-project-hail-mary",
+                description: "Ryland Grace is the sole survivor on a desperate, last-chance mission—and if he fails, humanity and the Earth itself will perish."
+            },
+            {
+                id: "3",
+                title: "Klara and the Sun",
+                author: "Kazuo Ishiguro",
+                cover: "https://via.placeholder.com/128x192",
+                pages: 320,
+                audioLength: "10 hours 16 minutes",
+                goodreadsLink: "https://www.goodreads.com/book/show/54120408-klara-and-the-sun",
+                description: "From her place in the store, Klara, an Artificial Friend with outstanding observational qualities, watches carefully the behavior of those who come in to browse."
+            },
+            {
+                id: "4",
+                title: "The Invisible Life of Addie LaRue",
+                author: "V.E. Schwab",
+                cover: "https://via.placeholder.com/128x192",
+                pages: 448,
+                audioLength: "17 hours 10 minutes",
+                goodreadsLink: "https://www.goodreads.com/book/show/50623864-the-invisible-life-of-addie-larue",
+                description: "A life no one will remember. A story you will never forget."
+            },
+            {
+                id: "5",
+                title: "Piranesi",
+                author: "Susanna Clarke",
+                cover: "https://via.placeholder.com/128x192",
+                pages: 272,
+                audioLength: "6 hours 58 minutes",
+                goodreadsLink: "https://www.goodreads.com/book/show/50202953-piranesi",
+                description: "Piranesi's house is no ordinary building: its rooms are infinite, its corridors endless, its walls are lined with thousands upon thousands of statues."
+            }
+        ];
+        
+        // Mock vote results
+        const mockVoteResults = [
+            { bookId: "1", votes: 3 },
+            { bookId: "2", votes: 5 },
+            { bookId: "3", votes: 2 },
+            { bookId: "4", votes: 4 },
+            { bookId: "5", votes: 1 }
+        ];
+        
+        // Selected books for the vote
+        let selectedBooks = [];
+        
+        // Navigation tab functionality
+        document.querySelectorAll('.nav-link').forEach(tab => {
+            tab.addEventListener('click', function(e) {
+                e.preventDefault();
+                document.querySelectorAll('.nav-link').forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+                
+                const tabId = this.getAttribute('data-tab');
+                document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+                document.getElementById(tabId).classList.add('active');
+                
+                // Load mock data
+                if (tabId === 'vote') {
+                    loadVotingBooks();
+                } else if (tabId === 'results') {
+                    loadVoteResults();
+                }
+            });
+        });
+        
+        // Search for books
+        function searchBooks() {
+            const query = document.getElementById('bookQuery').value;
+            if (query.length < 2) return;
+            
+            const resultsContainer = document.getElementById('searchResults');
+            resultsContainer.classList.remove('hidden');
+            
+            // In a real app, this would call the Google Books API
+            // For now, we'll use our mock data and filter it
+            const filteredBooks = mockBooks.filter(book => 
+                book.title.toLowerCase().includes(query.toLowerCase()) || 
+                book.author.toLowerCase().includes(query.toLowerCase())
+            );
+            
+            resultsContainer.innerHTML = '';
+            
+            if (filteredBooks.length === 0) {
+                resultsContainer.innerHTML = '<p style="padding: 10px;">No books found. Try a different search term.</p>';
+                return;
+            }
+            
+            filteredBooks.forEach(book => {
+                const bookItem = document.createElement('div');
+                bookItem.className = 'book-item';
+                bookItem.innerHTML = `
+                    <img src="${book.cover}" class="book-cover" alt="${book.title}">
+                    <div class="book-info">
+                        <h3>${book.title}</h3>
+                        <p>by ${book.author}</p>
+                        <p>${book.pages} pages</p>
+                    </div>
+                `;
+                
+                bookItem.addEventListener('click', () => addBookToSelection(book));
+                resultsContainer.appendChild(bookItem);
+            });
+        }
+        
+        // Add book to selection
+        function addBookToSelection(book) {
+            // Don't add duplicates
+            if (selectedBooks.some(b => b.id === book.id)) {
+                alert('This book is already in your selection.');
+                return;
+            }
+            
+            // Limit to 5 books
+            if (selectedBooks.length >= 5) {
+                alert('You can only select up to 5 books for a vote.');
+                return;
+            }
+            
+            selectedBooks.push(book);
+            document.getElementById('searchResults').classList.add('hidden');
+            document.getElementById('bookQuery').value = '';
+            
+            updateSelectedBooksDisplay();
+        }
+        
+        // Update the display of selected books
+        function updateSelectedBooksDisplay() {
+            const container = document.getElementById('selectedBooks');
+            
+            if (selectedBooks.length === 0) {
+                container.innerHTML = '<p>No books selected yet. Search and add books above.</p>';
+                return;
+            }
+            
+            container.innerHTML = '';
+            
+            selectedBooks.forEach((book, index) => {
+                const bookElement = document.createElement('div');
+                bookElement.className = 'selected-book';
+                bookElement.innerHTML = `
+                    <img src="${book.cover}" class="book-cover" alt="${book.title}">
+                    <div class="book-info">
+                        <h3>${book.title}</h3>
+                        <p>by ${book.author}</p>
+                        <div class="book-meta">
+                            <span class="meta-item">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                                    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+                                </svg>
+                                ${book.pages} pages
+                            </span>
+                            <span class="meta-item">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
+                                </svg>
+                                <a href="${book.goodreadsLink}" target="_blank">Goodreads</a>
+                            </span>
+                            <span class="meta-item">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M12 2v6m0 0v6m0-6h6m-6 0H6"></path>
+                                </svg>
+                                <a href="#" onclick="removeBookFromSelection(${index}); return false;">Remove</a>
+                            </span>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(bookElement);
+            });
+        }
+        
+        // Remove book from selection
+        function removeBookFromSelection(index) {
+            selectedBooks.splice(index, 1);
+            updateSelectedBooksDisplay();
+        }
+        
+        // Create a new vote
+        function createVote() {
+            if (selectedBooks.length < 2) {
+                alert('Please select at least 2 books for the vote.');
+                return;
+            }
+            
+            const voteName = document.getElementById('voteName').value;
+            if (!voteName) {
+                alert('Please enter a name for the vote.');
+                return;
+            }
+            
+            // In a real app, this would save the vote to a database
+            // For now, just show the success message
+            document.getElementById('voteCreatedMessage').classList.remove('hidden');
+            
+            // Generate a mock vote link
+            const voteId = Math.random().toString(36).substring(2, 8);
+            document.getElementById('voteLink').textContent = `https://bookclub.app/vote/${voteId}`;
+            
+            // Scroll to the message
+            document.getElementById('voteCreatedMessage').scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        // Copy vote link to clipboard
+        function copyVoteLink() {
+            const link = document.getElementById('voteLink').textContent;
+            navigator.clipboard.writeText(link)
+                .then(() => alert('Link copied to clipboard!'))
+                .catch(err => console.error('Failed to copy link: ', err));
+        }
+        
+        // Load books for voting
+        function loadVotingBooks() {
+            const voteBooksContainer = document.getElementById('voteBooks');
+            voteBooksContainer.innerHTML = '';
+            
+            if (selectedBooks.length > 0) {
+                // Use the books the host selected
+                selectedBooks.forEach(book => {
+                    addBookToVotingList(book, voteBooksContainer);
+                });
+            } else {
+                // Use mock data
+                mockBooks.slice(0, 4).forEach(book => {
+                    addBookToVotingList(book, voteBooksContainer);
+                });
+            }
+        }
+        
+        // Add a book to the voting list
+        function addBookToVotingList(book, container) {
+            const bookElement = document.createElement('div');
+            bookElement.className = 'book-vote-item';
+            bookElement.innerHTML = `
+                <img src="${book.cover}" class="book-cover" alt="${book.title}" style="width: 100px; height: 150px;">
+                <div class="vote-info">
+                    <h3>${book.title}</h3>
+                    <p><strong>by ${book.author}</strong></p>
+                    <p>${book.description}</p>
+                    <div class="book-meta">
+                        <span class="meta-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+                            </svg>
+                            ${book.pages} pages
+                        </span>
+                        <span class="meta-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
+                            </svg>
+                            <a href="${book.goodreadsLink}" target="_blank">Goodreads</a>
+                        </span>
+                        <span class="meta-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 2v6m0 0v6m0-6h6m-6 0H6"></path>
+                            </svg>
+                            ${book.audioLength} audiobook
+                        </span>
+                    </div>
+                    <div style="margin-top: 15px;">
+                        <button class="vote-button" data-book-id="${book.id}" onclick="toggleVote(this)">Vote for this book</button>
+                    </div>
+                </div>
+            `;
+            container.appendChild(bookElement);
+        }
+        
+        // Toggle vote selection
+        function toggleVote(button) {
+            // If multiple votes are not allowed, clear other selections
+            if (!document.getElementById('allowMultipleVotes').checked) {
+                document.querySelectorAll('.vote-button').forEach(btn => {
+                    btn.classList.remove('voted');
+                    btn.textContent = 'Vote for this book';
+                });
+            }
+            
+            // Toggle this button
+            if (button.classList.contains('voted')) {
+                button.classList.remove('voted');
+                button.textContent = 'Vote for this book';
+            } else {
+                button.classList.add('voted');
+                button.textContent = 'Selected ✓';
+            }
+        }
+        
+        // Submit vote
+        function submitVote() {
+            const votedButtons = document.querySelectorAll('.vote-button.voted');
+            
+            if (votedButtons.length === 0) {
+                alert('Please select at least one book before submitting your vote.');
+                return;
+            }
+            
+            // In a real app, this would save the vote to a database
+            document.getElementById('voteSubmittedMessage').classList.remove('hidden');
+            
+            // Disable voting after submission
+            document.querySelectorAll('.vote-button').forEach(btn => {
+                btn.disabled = true;
+            });
+            
+            // Scroll to success message
+            document.getElementById('voteSubmittedMessage').scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        // Load vote results
+        function loadVoteResults() {
+            const resultsContainer = document.getElementById('voteResults');
+            resultsContainer.innerHTML = '';
+            
+            // Get total votes
+            const totalVotes = mockVoteResults.reduce((sum, item) => sum + item.votes, 0);
+            
+            // Sort by votes (descending)
+            const sortedResults = [...mockVoteResults].sort((a, b) => b.votes - a.votes);
+            
+            sortedResults.forEach(result => {
+                const book = mockBooks.find(b => b.id === result.bookId);
+                if (!book) return;
+                
+                const percentage = Math.round((result.votes / totalVotes) * 100);
+                const isWinner = sortedResults[0].bookId === result.bookId;
+                
+                const resultElement = document.createElement('div');
+                resultElement.className = 'book-vote-item';
+                resultElement.style.border = isWinner ? '2px solid var(--secondary)' : '';
+                resultElement.innerHTML = `
+                    <img src="${book.cover}" class="book-cover" alt="${book.title}" style="width: 100px; height: 150px;">
+                    <div class="vote-info">
+                        <h3>${book.title} ${isWinner ? '<span style="color: var(--secondary);">(Winner)</span>' : ''}</h3>
+                        <p><strong>by ${book.author}</strong></p>
+                        <div class="book-meta">
+                            <span class="meta-item">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                                    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+                                </svg>
+                                ${book.pages} pages
+                            </span>
+                        </div>
+                        <div style="margin-top: 15px;">
+                            <div class="vote-count">${result.votes} votes (${percentage}%)</div>
+                        </div>
+                        <div style="margin-top: 10px; width: 100%; background-color: #eee; height: 10px; border-radius: 5px;">
+                            <div style="width: ${percentage}%; background-color: var(--primary); height: 10px; border-radius: 5px;"></div>
+                        </div>
+                    </div>
+                `;
+                resultsContainer.appendChild(resultElement);
+            });
+        }
+        
+        // Finalize vote
+        function finalizeVote() {
+            // In a real app, this would update the database
+            alert('The vote has been finalized! An email with the results will be sent to all participants.');
+        }
+        
+        // Focus handling for search
+        document.getElementById('bookQuery').addEventListener('focus', function() {
+            if (this.value.length >= 2) {
+                document.getElementById('searchResults').classList.remove('hidden');
+            }
+        });
+        
+        // Close search results when clicking outside
+        document.addEventListener('click', function(event) {
+            const searchBox = document.getElementById('bookSearch');
+            const searchResults = document.getElementById('searchResults');
+            
+            if (!searchBox.contains(event.target)) {
+                searchResults.classList.add('hidden');
+            }
+        });
+    </script>
+</body>
+</html>
