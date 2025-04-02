@@ -54,7 +54,7 @@
             text-shadow: 1px 1px 0px var(--border-highlight); font-size: 2.4em;
         }
         h2 {
-            font-size: 1.0em; margin: 0The 0 35px 0; color: var(--subtle-text-color);
+            font-size: 1.0em; margin: 0 0 35px 0; color: var(--subtle-text-color);
             text-transform: uppercase; font-weight: normal; text-align: center;
             border: none; padding-bottom: 0; display: block;
         }
@@ -254,18 +254,10 @@
         #revealVotesBtn { font-size: 1.05em; padding: 8px 20px; height: 36px; padding-top: 7px; }
 
         .poll-option-card.winner {
-            background-color: #e0f0e0;
-            border-color: #6cac6c #5a8a5a #5a8a5a #6cac6c;
-            animation: winnerPulse 2s infinite;
+            border-color: var(--success-hover-color) var(--success-color) var(--success-color) var(--success-hover-color);
         }
         .poll-option-card.winner .vote-count {
             color: var(--success-color); font-weight: bold;
-        }
-
-        @keyframes winnerPulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.02); }
-            100% { transform: scale(1); }
         }
 
         .status-message { text-align: center; padding: 5px 0; color: var(--subtle-text-color); font-size: 0.95em; min-height: 1.4em; text-transform: uppercase; }
@@ -300,48 +292,6 @@
         .placeholder-svg rect { fill: none; }
         .placeholder-svg path, .placeholder-svg circle { stroke: var(--subtle-text-color); fill: var(--subtle-text-color); }
         .manual-placeholder-svg text { font-family: var(--font-retro); fill: var(--text-color); }
-
-        /* Mobile-friendly adjustments */
-        @media (max-width: 600px) {
-            .container {
-                padding: 15px 10px;
-                margin: 10px 5px;
-            }
-            
-            #manualEntryForm {
-                flex-direction: column;
-                align-items: center;
-            }
-            
-            .manual-field-group {
-                width: 100%;
-                margin-bottom: 10px;
-            }
-            
-            #manualTitleInput, #manualAuthorInput, #manualLinkInput {
-                width: 100%;
-            }
-            
-            #addManualEntryBtn {
-                width: 100%;
-                margin-left: 0;
-                height: auto;
-                padding: 8px;
-            }
-            
-            #selectedBooksList {
-                grid-template-columns: 1fr;
-            }
-            
-            .poll-options {
-                grid-template-columns: 1fr;
-            }
-            
-            .selected-card, .poll-option-card {
-                max-width: 300px;
-                margin: 0 auto;
-            }
-        }
     </style>
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js';
@@ -391,13 +341,6 @@
         const revealVotesArea = document.getElementById('revealVotesArea');
         const revealVotesBtn = document.getElementById('revealVotesBtn');
         const pollBooksTextarea = document.getElementById('pollBooksTextarea');
-        const editModal = document.getElementById('editModal');
-        const editForm = document.getElementById('editForm');
-        const editTitleInput = document.getElementById('editTitle');
-        const editAuthorInput = document.getElementById('editAuthor');
-        const editLinkInput = document.getElementById('editLink');
-        const cancelEditBtn = document.getElementById('cancelEditBtn');
-        const saveEditBtn = document.getElementById('saveEditBtn');
 
         // State
         let selectedBooks = [];
@@ -406,7 +349,6 @@
         let currentPollData = null;
         let pollDataListener = null;
         let votesRevealed = false;
-        let currentEditKey = null;
 
         // Placeholders
         const searchResultPlaceholderSvg = `<svg width="30" height="45" viewBox="0 0 30 45" fill="none" xmlns="http://www.w3.org/2000/svg" class="placeholder-svg"><rect width="30" height="45"/><path d="M10 37H20" stroke="#6c6a64" stroke-width="1.2" /><path d="M10 33H20" stroke="#6c6a64" stroke-width="1.2" /><path d="M15 29C17.5 29 19.5 27 19.5 24.5C19.5 22 17.5 20 15 20C12.5 20 10.5 22 10.5 24.5C10.5 25.5 10.9 26.5 11.5 27.2" stroke="#6c6a64" stroke-width="1.2" /><path d="M15 29V31" stroke="#6c6a64" stroke-width="1.2" /><circle cx="15" cy="33" r="0.8" fill="#6c6a64"/></svg>`;
@@ -453,7 +395,7 @@
 
         function escapeHtmlBasic(str) {
             if (typeof str !== 'string') str = String(str || '');
-            return str.replace(/&/g, "&").replace(/</g, "<").replace(/>/g, ">").replace(/"/g, """).replace(/'/g, "'");
+            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
         }
 
         // Search Functionality
@@ -648,7 +590,7 @@
                 if (book.isManual) {
                     cardElement.classList.add('manual-entry');
                     coverHtml = generateManualPlaceholderSvg(book.title);
-                    const manualLinkHtml = book.link 
+                    const manualLinkHtml = book.link
                         ? `<div class="links"><a href="${escapeHtmlBasic(book.link)}" target="_blank" rel="noopener">User Link</a></div>`
                         : '<div class="links"></div>';
                     cardElement.innerHTML = `
@@ -660,9 +602,7 @@
                         <div class="card-actions"></div>
                     `;
                 } else {
-                    coverHtml = book.coverId 
-                        ? `<img src="https://covers.openlibrary.org/b/id/${book.coverId}-M.jpg" alt="${escapeHtmlBasic(book.title)}" loading="lazy">` 
-                        : selectedListPlaceholderSvg;
+                    coverHtml = book.coverId ? `<img src="https://covers.openlibrary.org/b/id/${book.coverId}-M.jpg" alt="${escapeHtmlBasic(book.title)}" loading="lazy">` : selectedListPlaceholderSvg;
                     const pageCountDisplay = (book.pageCount && book.pageCount !== 'N/A') ? `${book.pageCount}p` : '';
                     const linksHtml = generateLinksHtmlAdmin(book);
                     cardElement.innerHTML = `
@@ -676,14 +616,6 @@
                 }
 
                 const actionsDiv = cardElement.querySelector('.card-actions');
-                
-                // Add Edit button
-                const editButton = document.createElement('button');
-                editButton.textContent = 'Edit';
-                editButton.addEventListener('click', () => openEditModal(book.key));
-                actionsDiv.appendChild(editButton);
-
-                // Add Remove button
                 const removeButton = document.createElement('button');
                 removeButton.className = 'btn-remove';
                 removeButton.textContent = 'Remove';
@@ -693,57 +625,6 @@
                 selectedBooksListDiv.appendChild(cardElement);
             });
         }
-
-        // Edit Functions
-        function openEditModal(key) {
-            const book = selectedBooks.find(b => b.key === key);
-            if (!book) return;
-
-            currentEditKey = key;
-            editTitleInput.value = book.title;
-            editAuthorInput.value = book.authors;
-            editLinkInput.value = book.link || '';
-            editModal.style.display = 'block';
-        }
-
-        function closeEditModal() {
-            editModal.style.display = 'none';
-            currentEditKey = null;
-        }
-
-        function saveEdit(e) {
-            e.preventDefault();
-            
-            const newTitle = editTitleInput.value.trim();
-            const newAuthor = editAuthorInput.value.trim() || "N/A";
-            const newLink = editLinkInput.value.trim();
-
-            if (!newTitle) {
-                alert('Title is required');
-                return;
-            }
-
-            if (newLink && !newLink.match(/^https?:\/\//)) {
-                alert('Invalid URL (use http/https)');
-                return;
-            }
-
-            const bookIndex = selectedBooks.findIndex(b => b.key === currentEditKey);
-            if (bookIndex !== -1) {
-                selectedBooks[bookIndex] = {
-                    ...selectedBooks[bookIndex],
-                    title: newTitle,
-                    authors: newAuthor,
-                    link: newLink
-                };
-                displaySelectedBooksAdmin();
-                closeEditModal();
-            }
-        }
-
-        // Edit Event Listeners
-        cancelEditBtn.addEventListener('click', closeEditModal);
-        editForm.addEventListener('submit', saveEdit);
 
         // Poll Creation with Automatic Book Info Textarea
         async function startPoll() {
@@ -1152,23 +1033,6 @@
                 <button id="revealVotesBtn">Reveal Votes</button>
             </div>
             <div id="pollVoteStatus" class="status-message" style="margin-top: 15px;"></div>
-        </div>
-    </div>
-    <div id="editModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000;">
-        <div style="background: var(--card-bg); margin: 15% auto; padding: 20px; max-width: 400px; border: 2px outset var(--border-color); box-shadow: var(--card-shadow);">
-            <h2 style="margin-top: 0;">Edit Book</h2>
-            <form id="editForm">
-                <label for="editTitle">Title:</label>
-                <input type="text" id="editTitle" style="width: 100%;">
-                <label for="editAuthor">Author:</label>
-                <input type="text" id="editAuthor" style="width: 100%;">
-                <label for="editLink">Link:</label>
-                <input type="url" id="editLink" style="width: 100%;">
-                <div style="margin-top: 15px; text-align: right;">
-                    <button type="button" id="cancelEditBtn" style="margin-right: 10px;">Cancel</button>
-                    <button type="submit" id="saveEditBtn">Save</button>
-                </div>
-            </form>
         </div>
     </div>
 </body>
