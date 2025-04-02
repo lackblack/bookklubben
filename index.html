@@ -290,7 +290,7 @@
 
     <!-- Section 1: Poll Creation Interface (Admin View) -->
     <div id="adminArea">
-        <h1>Book Poll_Creator</h1>
+        <h1>Book Klubben_poll_helper</h1>
         <section class="add-books-area">
             <h2>Step 1: Add Books</h2>
             <div class="section-content">
@@ -580,8 +580,8 @@
                 cardContent = `
                     ${coverHtml}
                     <h3>${book.title}</h3>
-                    <p><em>${book.authors}</em></p> {/* Display manual author */}
-                    <p>(Manual)</p> {/* Optional indicator */}
+                    <p><em>${book.authors}</em></p> 
+                    <p>(Manual)</p> 
                     <button class="btn-remove" onclick="removeBook('${book.key}')">Remove</button>
                 `;
             } else { // Standard Entry
