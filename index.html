@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Book Klubben poll_helper</title> <!-- Updated Title -->
+    <title>Book Klubben poll_helper</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=VT323&display=swap" rel="stylesheet">
     <style>
-        /* --- Retro Computing Vibe - Deluxe v2 --- */
+        
         :root {
             --bg-color: #d8d4c8;
             --card-bg: #ece8dc;
@@ -64,7 +64,7 @@
         .section-content { margin-top: -1.5em; }
 
         /* Forms & Buttons */
-        input[type="text"], textarea {
+        input[type="text"], input[type="url"], textarea {
             padding: 8px 10px; border: 1px solid;
             border-color: var(--border-shadow) var(--border-highlight) var(--border-highlight) var(--border-shadow);
             border-style: inset; border-width: 2px; font-size: 1em;
@@ -72,10 +72,13 @@
             background-color: var(--input-bg); margin-bottom: 8px; width: 100%;
             font-family: var(--font-retro); color: var(--text-color); outline: none;
         }
-        input[type="text"]:focus, textarea:focus { background-color: #fff; }
-        textarea { /* Now used for Author in manual entry */
-            min-height: 38px; max-height: 38px; resize: none; line-height: 1.5; padding-top: 7px;
-        }
+        input[type="text"]:focus, input[type="url"]:focus, textarea:focus { background-color: #fff; }
+        textarea { resize: vertical; min-height: 60px; }
+         #copyInfoTextarea { /* Style for hidden textarea */
+              position: absolute; left: -9999px; top: auto;
+              width: 1px; height: 1px; overflow: hidden; opacity: 0;
+         }
+
         label {
             font-weight: normal; margin-right: 5px; margin-top: 20px; font-size: 1em;
             color: var(--subtle-text-color); display: inline-block; margin-bottom: 3px;
@@ -89,7 +92,7 @@
              padding: 10px 12px; display: block; margin: 5px auto 0 auto;
         }
 
-        /* Manual Add Area - Title/Author Inline */
+        /* Manual Add Area */
         .manual-add-area {
             margin-top: 15px; padding: 8px 10px; border-top: 1px dashed var(--border-color);
             text-align: center;
@@ -104,13 +107,12 @@
          .manual-field-group label {
              font-size: 0.9em; margin-bottom: 1px; color: var(--text-color);
          }
-         #manualTitleInput { width: 200px; margin-bottom: 0; } /* Adjusted width */
-         #manualAuthorInput { /* Changed ID from manualInfoTextarea */
-             width: 180px; margin-bottom: 0; /* Adjusted width */
-             /* Inherits input[type="text"] styles now */
-         }
+         #manualTitleInput { width: 180px; margin-bottom: 0; }
+         #manualAuthorInput { width: 160px; margin-bottom: 0; }
+         #manualLinkInput { width: 180px; margin-bottom: 0; }
          #addManualEntryBtn {
              margin-bottom: 0; align-self: flex-end; height: 38px; padding-top: 5px;
+             margin-left: 5px;
          }
 
         /* Buttons General */
@@ -130,12 +132,20 @@
             cursor: not-allowed; color: var(--subtle-text-color); background-color: #e5e1d8; transform: none;
         }
         /* Specific Button Colors */
-        #addManualEntryBtn, .btn-vote, #startPollBtn { background-color: #d4e2d4; }
-        #addManualEntryBtn:hover, .btn-vote:hover, #startPollBtn:hover { background-color: #e0f0e0; }
-        #addManualEntryBtn:active, .btn-vote:active, #startPollBtn:active { background-color: #c8d8c8; }
-        .btn-remove, #closeSearchBtn { background-color: #eacccc; }
-        .btn-remove:hover, #closeSearchBtn:hover { background-color: #f5dddd; }
-        .btn-remove:active, #closeSearchBtn:active { background-color: #e0c0c0; }
+        #addManualEntryBtn, .btn-vote, #startPollBtn, #revealVotesBtn { background-color: #d4e2d4; }
+        #addManualEntryBtn:hover, .btn-vote:hover, #startPollBtn:hover, #revealVotesBtn:hover { background-color: #e0f0e0; }
+        #addManualEntryBtn:active, .btn-vote:active, #startPollBtn:active, #revealVotesBtn:active { background-color: #c8d8c8; }
+
+        /* Card Buttons */
+        .btn-remove { background-color: #eacccc; }
+        .btn-remove:hover { background-color: #f5dddd; }
+        .btn-remove:active { background-color: #e0c0c0; }
+
+        .btn-copy-single { background-color: var(--secondary-color); } /* Copy Button on Card */
+        .btn-copy-single:hover { background-color: var(--secondary-hover-color); }
+        .btn-copy-single:active { background-color: #b88030; }
+
+
         #closeSearchBtn {
              position: absolute; top: -10px; right: -1px; z-index: 10;
              padding: 1px 7px; font-size: 1.3em; line-height: 1.1; display: none;
@@ -165,7 +175,7 @@
         .book-info { flex-grow: 1; overflow: hidden; }
         .book-info p { margin: 1px 0 0 0; font-size: 0.9em; color: var(--subtle-text-color); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .book-info strong { font-size: 0.95em; color: var(--text-color); font-weight: normal; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 1px; }
-        .book-item button { margin-left: 8px; padding: 4px 10px; font-size: 0.9em; } /* Keep existing styles for the button */
+        .book-item button { margin-left: 8px; padding: 4px 10px; font-size: 0.9em; }
 
 
         /* Selected Cards */
@@ -174,48 +184,52 @@
             background-color: var(--card-bg); border: 1px solid;
             border-color: var(--border-highlight) var(--border-shadow) var(--border-shadow) var(--border-highlight);
             border-style: outset; border-width: 2px; box-shadow: none; text-align: center;
-            display: flex; flex-direction: column; /* Key for vertical layout and margin: auto */
+            display: flex; flex-direction: column;
             overflow: hidden; padding: 15px;
             transition: transform 0.1s ease-out, border-color 0.1s ease-out;
         }
         .selected-card:hover { transform: translate(-1px, -1px); border-color: #fff #aaa #aaa #fff; }
-        .selected-card img, .selected-card .placeholder-svg { /* Applies to manual-placeholder-svg too */
+        .selected-card img, .selected-card .placeholder-svg {
             width: 65px; height: 97px; object-fit: cover; border: 1px solid;
             border-color: var(--border-shadow) var(--border-highlight) var(--border-highlight) var(--border-shadow);
-            border-style: inset; border-width: 2px; margin: 0 auto 10px auto; /* Horizontal centering + bottom margin */
+            border-style: inset; border-width: 2px; margin: 0 auto 10px auto;
             image-rendering: pixelated; image-rendering: -moz-crisp-edges; image-rendering: crisp-edges;
-            background-color: var(--border-color);
-            flex-shrink: 0; /* Prevent SVG/image from shrinking */
+            background-color: var(--border-color); flex-shrink: 0;
         }
-        /* Specific style for manual placeholder SVG border override */
          .selected-card .manual-placeholder-svg {
-             border: 1px solid var(--border-color); /* Simple border */
-             border-style: solid;
-             background-color: #e0dccf; /* Match page bg */
+             border: 1px solid var(--border-color); border-style: solid; background-color: #e0dccf;
          }
 
-        .selected-card h3 { font-size: 1.1em; margin: 4px 0 3px 0; font-weight: normal; line-height: 1.3; color: var(--text-color); text-transform: none; }
-        .selected-card p { font-size: 1em; color: var(--subtle-text-color); margin: 2px 0; }
+        .selected-card h3 { font-size: 1.1em; margin: 4px 0 3px 0; font-weight: normal; line-height: 1.3; color: var(--text-color); text-transform: none; text-align: center; }
+        .selected-card p { font-size: 1em; color: var(--subtle-text-color); margin: 2px 0; text-align: center; }
         .selected-card p em { font-style: normal; }
-        .selected-card .links { /* Consistent spacing element */
+        .selected-card .links {
             margin-top: 8px; font-size: 0.9em; line-height: 1.4; margin-bottom: 10px;
-            flex-grow: 1; /* Allow links div to take up space if needed, might not be necessary */
-            min-height: calc(0.9em * 1.4); /* Ensure minimum height even if empty */
+            flex-grow: 1; min-height: calc(0.9em * 1.4); word-wrap: break-word; text-align: center;
         }
         .selected-card .links a { color: var(--primary-color); text-decoration: underline; margin: 0 5px; }
         .selected-card .links a:hover { color: var(--primary-hover-color); }
-        .selected-card .btn-remove {
-             margin-top: auto; /* Pushes button to the bottom */
-             font-size: 0.9em; padding: 5px 12px; width: auto; height: 30px; padding-top: 4px;
-             flex-shrink: 0; /* Prevent button shrinking */
-        }
 
-        /* Manual/Freeform Card Styling */
-         .selected-card.manual-entry { /* Changed class name */
-            border-style: outset; /* Keep consistent border */
-         }
-         /* No specific styles needed now as it uses title/author */
-         .selected-card.manual-entry .freeform-text { display: none; } /* Hide this if it exists from old data */
+        /* ---vvv--- Card Buttons Area ---vvv--- */
+        .selected-card .card-actions {
+             margin-top: auto; /* Pushes buttons to the bottom */
+             display: flex; /* Use flexbox */
+             justify-content: center; /* Center buttons */
+             gap: 10px; /* Space between buttons */
+             flex-wrap: wrap; /* Allow wrapping */
+             padding-top: 10px; /* Space above buttons */
+             flex-shrink: 0;
+        }
+        .selected-card .card-actions button {
+             font-size: 0.9em; padding: 5px 12px; width: auto; height: 30px; padding-top: 4px;
+             margin: 0; /* Remove default margins if any */
+        }
+        /* ---^^^--- END Card Buttons Area ---^^^--- */
+
+
+        /* Manual Card Specific */
+         .selected-card.manual-entry { border-style: outset; }
+         .selected-card.manual-entry .freeform-text { display: none; }
 
 
         /* Poll View */
@@ -227,10 +241,9 @@
             border-color: var(--border-highlight) var(--border-shadow) var(--border-shadow) var(--border-highlight);
             border-style: outset; border-width: 2px; box-shadow: none; padding: 18px;
             display: flex; flex-direction: column; justify-content: space-between;
-            transition: transform 0.1s ease-out, border-color 0.1s ease-out;
+            transition: transform 0.1s ease-out, border-color 0.1s ease-out, background-color 0.2s ease-out;
         }
         .poll-option-card:hover { transform: translate(-1px, -1px); border-color: #fff #aaa #aaa #fff; }
-        /* Poll card content */
         .poll-card-content { text-align: center; margin-bottom: 12px; flex-grow: 1; }
         .poll-card-content img, .poll-card-content .placeholder-svg, .poll-card-content .manual-placeholder-svg {
              margin: 0 auto 10px auto; border: 1px solid;
@@ -239,22 +252,43 @@
              image-rendering: pixelated; image-rendering: -moz-crisp-edges; image-rendering: crisp-edges;
              background-color: var(--border-color);
         }
-         .poll-card-content .manual-placeholder-svg { /* Override for manual in poll */
+         .poll-card-content .manual-placeholder-svg {
               border: 1px solid var(--border-color); border-style: solid; background-color: #e0dccf;
           }
 
         .poll-option-card h4 { margin: 4px 0 4px 0; font-size: 1.15em; font-weight: normal; text-align: center; color: var(--text-color); text-transform: none; }
         .poll-option-card p { margin: 2px 0; font-size: 1em; color: var(--subtle-text-color); text-align: center; }
         .poll-option-card p em { font-style: normal; }
-        .poll-option-card .links { margin: 10px 0; font-size: 0.9em; text-align: center; }
+        .poll-option-card .links {
+            margin: 10px 0; font-size: 0.9em; text-align: center;
+            word-wrap: break-word; min-height: calc(0.9em * 1.4);
+        }
         .poll-option-card .links a { color: var(--primary-color); text-decoration: underline; margin: 0 5px; }
         .poll-option-card .links a:hover { color: var(--primary-hover-color); }
+
         /* Poll vote area */
         .vote-area { margin-top: 12px; text-align: center; border-top: 1px dashed var(--border-color); padding-top: 12px; }
-        .vote-count { display: block; font-size: 1.15em; color: var(--primary-color); margin-bottom: 10px; }
+        .vote-count {
+             display: block; font-size: 1.15em; color: var(--primary-color); margin-bottom: 10px;
+             visibility: hidden; opacity: 0; height: 0;
+             transition: opacity 0.3s ease-in-out, height 0.3s ease-in-out, visibility 0.3s;
+         }
+         #pollView.votes-revealed .vote-count {
+             visibility: visible; opacity: 1; height: auto; margin-bottom: 10px;
+         }
         .btn-vote { width: auto; font-size: 1em; padding: 7px 18px; height: 34px; padding-top: 6px;}
 
-        /* Manual Entry Poll Card (No special class needed now) */
+        /* Reveal Button Styling */
+         #revealVotesArea { margin: 25px 0 10px 0; text-align: center; }
+         #revealVotesBtn { font-size: 1.05em; padding: 8px 20px; height: 36px; padding-top: 7px; }
+
+        /* Winner Highlighting */
+         .poll-option-card.winner {
+             border-color: var(--success-hover-color) var(--success-color) var(--success-color) var(--success-hover-color);
+         }
+         .poll-option-card.winner .vote-count {
+             color: var(--success-color); font-weight: bold;
+         }
 
         /* Status & Placeholders */
         .status-message { text-align: center; padding: 5px 0; color: var(--subtle-text-color); font-size: 0.95em; min-height: 1.4em; text-transform: uppercase; }
@@ -263,21 +297,34 @@
         .placeholder-text { color: var(--subtle-text-color); text-align: center; padding: 15px 0; font-size: 0.95em; line-height: 1.4; }
 
         /* Poll Share Area */
-        #pollShareArea {
+        #pollShareArea { /* For Firebase Poll Link */
             margin-top: 20px; padding: 15px; background-color: rgba(0,0,0,0.03);
             border: 1px solid; border-color: var(--border-highlight) var(--border-shadow) var(--border-shadow) var(--border-highlight);
             border-style: outset; border-width: 2px; text-align: center;
         }
-        #pollShareLink {
-            font-weight: normal; word-break: break-all; display: block; margin: 8px 0;
-            background: var(--input-bg); padding: 8px; border: 1px solid;
-            border-color: var(--border-shadow) var(--border-highlight) var(--border-highlight) var(--border-shadow);
-            border-style: inset; border-width: 2px; color: var(--primary-color);
-            text-decoration: none; font-size: 0.95em;
-        }
-        #pollShareLink:hover { background-color: #fff; }
-        #copyStatus { font-size: 0.9em; min-height: 1.3em; margin-top: 5px; }
-        #pollShareArea button { font-size: 0.95em; padding: 6px 15px; height: 30px; padding-top: 5px; }
+         #pollShareLink {
+             font-weight: normal; word-break: break-all; display: block; margin: 8px 0;
+             background: var(--input-bg); padding: 8px; border: 1px solid;
+             border-color: var(--border-shadow) var(--border-highlight) var(--border-highlight) var(--border-shadow);
+             border-style: inset; border-width: 2px; color: var(--primary-color);
+             text-decoration: none; font-size: 0.95em;
+         }
+         #pollShareLink:hover { background-color: #fff; }
+         #pollShareArea button { font-size: 0.95em; padding: 6px 15px; height: 30px; padding-top: 5px; } /* Poll link copy btn */
+
+
+         /* Admin Action Buttons Area */
+         .admin-action-buttons {
+             text-align: center; margin-top: 25px;
+         }
+         /* Status messages for buttons */
+         #copyInfoStatus, /* Re-purposed for single copy feedback */
+         #copyStatus, /* Poll Link Copy feedback */
+         #startPollStatus {
+             min-height: 1.3em; margin-top: 5px; font-size: 0.9em;
+             text-align: center;
+         }
+
 
         /* View Visibility */
         #adminArea { display: block; }
@@ -287,7 +334,6 @@
         .placeholder-svg { display: block; flex-shrink: 0; border: none !important; background-color: var(--border-color); }
         .placeholder-svg rect { fill: none; }
         .placeholder-svg path, .placeholder-svg circle { stroke: var(--subtle-text-color); fill: var(--subtle-text-color); }
-        /* Manual Placeholder Specific Text */
         .manual-placeholder-svg text { font-family: var(--font-retro); fill: var(--text-color); }
 
     </style>
@@ -316,21 +362,24 @@
                     <button id="closeSearchBtn" onclick="closeSearchResults()" title="Close Search Results">X</button>
                 </div>
 
-                <!-- Compact Manual Entry Area -->
                 <div class="manual-add-area">
-                    <form id="manualEntryForm" onsubmit="addManualEntry(); return false;">
-                        <div class="manual-field-group">
-                            <label for="manualTitleInput">Title:</label>
-                            <input type="text" id="manualTitleInput" placeholder="(Required)" aria-label="Manual Book Title">
-                        </div>
-                        <div class="manual-field-group">
-                             <label for="manualAuthorInput">Info:</label>
-                            <input type="text" id="manualAuthorInput" placeholder="(Optional)" aria-label="Manual Book Author">
-                        </div>
-                        <button type="submit" id="addManualEntryBtn">Add Manual</button>
-                    </form>
-                    <div id="manualAddStatus" class="status-message error"></div>
-                </div>
+                     <form id="manualEntryForm" onsubmit="addManualEntry(); return false;">
+                         <div class="manual-field-group">
+                             <label for="manualTitleInput">Title:</label>
+                             <input type="text" id="manualTitleInput" placeholder="(Required)" aria-label="Manual Book Title">
+                         </div>
+                         <div class="manual-field-group">
+                              <label for="manualAuthorInput">Info:</label>
+                             <input type="text" id="manualAuthorInput" placeholder="(Optional)" aria-label="Manual Book Author">
+                         </div>
+                         <div class="manual-field-group">
+                            <label for="manualLinkInput">Link:</label>
+                            <input type="url" id="manualLinkInput" placeholder="(Optional URL)" aria-label="Manual Book Link">
+                         </div>
+                         <button type="submit" id="addManualEntryBtn">Add Manual</button>
+                     </form>
+                     <div id="manualAddStatus" class="status-message error"></div>
+                 </div>
             </div>
         </section>
 
@@ -340,16 +389,27 @@
                 <div id="selectedBooksList">
                      <p class="placeholder-text"></p>
                  </div>
-                 <div style="text-align: center; margin-top: 25px;">
-                     <button id="startPollBtn" onclick="startPoll()">MAKE_POLL</button>
+
+                 <!-- Hidden Textarea for Copy Info -->
+                 <textarea id="copyInfoTextarea" aria-hidden="true"></textarea>
+                 <!-- Status message for single copy actions -->
+                 <div id="copyInfoStatus" class="status-message"></div>
+
+                 <!-- Make Poll Button Area -->
+                 <div class="admin-action-buttons">
+                    <button id="startPollBtn" onclick="startPoll()">MAKE_POLL</button>
                  </div>
+                 <div id="startPollStatus" class="status-message error"></div>
+
+
+                 <!-- Poll Link Share Area (shown after poll creation) -->
                  <div id="pollShareArea" style="display: none;">
                      >> Poll Ready! Share Link:
                      <a id="pollShareLink" href="#" target="_blank" rel="noopener noreferrer"></a>
                      <button onclick="copyPollLink()" style="margin-top: 10px;">Copy_Link</button>
                      <div id="copyStatus" class="status-message"></div>
                  </div>
-                 <div id="startPollStatus" class="status-message error"></div>
+
              </div>
          </section>
     </div>
@@ -360,54 +420,61 @@
         <div id="pollOptions" class="poll-options">
              <p class="placeholder-text">[[ Waiting For Data ]]</p>
         </div>
+        <div id="revealVotesArea" style="display: none;">
+            <button id="revealVotesBtn" onclick="revealVotes()">Reveal Votes</button>
+        </div>
         <div id="pollVoteStatus" class="status-message" style="margin-top: 15px;"></div>
     </div>
 
 </div>
 
 <script>
-    // ---vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv---
-    // --- PASTE YOUR ACTUAL FIREBASE CONFIGURATION HERE ---
-    // ---vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv---
+   
     const firebaseConfig = {
-      apiKey: "AIzaSyAPi4OmZieXOwy3fDhXPPt9ac_KCE0_hkw", // Replace if needed
+      apiKey: "AIzaSyAPi4OmZieXOwy3fDhXPPt9ac_KCE0_hkw",
       authDomain: "book-klubben-236e1.firebaseapp.com",
-      databaseURL: "https://book-klubben-236e1-default-rtdb.europe-west1.firebasedatabase.app", // VERIFY THIS
+      databaseURL: "https://book-klubben-236e1-default-rtdb.europe-west1.firebasedatabase.app", 
       projectId: "book-klubben-236e1",
       storageBucket: "book-klubben-236e1.appspot.com",
       messagingSenderId: "245694652120",
       appId: "1:245694652120:web:f550759de576dea4c7c1ad"
     };
-    // ---^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^---
-    // --- END OF FIREBASE CONFIGURATION                 ---
-    // ---^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^---
-
-
-    // Initialize Firebase
+  
+    let database;
     try {
          if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
-    } catch(e) { console.error("FB INIT ERR:", e); alert("FATAL: Could not initialize Firebase. Check config."); }
-    const database = firebase.database();
+         database = firebase.database();
+         console.log("Firebase Initialized Successfully.");
+    } catch(e) {
+        console.error("FIREBASE INIT ERROR:", e);
+        document.body.innerHTML = `<div style="padding: 20px; background-color: #fdd; border: 2px solid red; color: black; font-family: monospace;"><h1>FATAL ERROR</h1><p>Could not initialize Firebase. Check the <code>firebaseConfig</code> object.</p><p><strong>Error Details:</strong> ${e.message}</p><p>See console (F12) for more details.</p></div>`;
+        throw new Error("Firebase initialization failed.");
+    }
 
     // --- DOM Elements ---
     const searchInput = document.getElementById('searchInput');
     const searchResultsDiv = document.getElementById('searchResults');
     const searchStatusDiv = document.getElementById('searchStatus');
     const manualTitleInput = document.getElementById('manualTitleInput');
-    const manualAuthorInput = document.getElementById('manualAuthorInput'); // Changed ID
+    const manualAuthorInput = document.getElementById('manualAuthorInput');
+    const manualLinkInput = document.getElementById('manualLinkInput');
     const manualAddStatusDiv = document.getElementById('manualAddStatus');
     const selectedBooksListDiv = document.getElementById('selectedBooksList');
     const startPollBtn = document.getElementById('startPollBtn');
     const startPollStatus = document.getElementById('startPollStatus');
     const pollShareArea = document.getElementById('pollShareArea');
     const pollShareLink = document.getElementById('pollShareLink');
-    const copyStatusDiv = document.getElementById('copyStatus');
+    const copyStatusDiv = document.getElementById('copyStatus'); // For poll link copy
     const adminAreaDiv = document.getElementById('adminArea');
     const pollViewDiv = document.getElementById('pollView');
     const pollTitleH1 = document.getElementById('pollTitle');
     const pollOptionsDiv = document.getElementById('pollOptions');
     const pollVoteStatusDiv = document.getElementById('pollVoteStatus');
     const closeSearchBtn = document.getElementById('closeSearchBtn');
+    const revealVotesArea = document.getElementById('revealVotesArea');
+    const revealVotesBtn = document.getElementById('revealVotesBtn');
+    const copyInfoTextarea = document.getElementById('copyInfoTextarea'); // Reused hidden textarea
+    const copyInfoStatus = document.getElementById('copyInfoStatus'); // Reused status div for single copies
 
     // --- State ---
     let selectedBooks = [];
@@ -415,39 +482,40 @@
     let currentPollId = null;
     let currentPollData = null;
     let pollDataListener = null;
+    let votesRevealed = false;
 
     // --- Placeholders ---
     const searchResultPlaceholderSvg = `<svg width="30" height="45" viewBox="0 0 30 45" fill="none" xmlns="http://www.w3.org/2000/svg" class="placeholder-svg"><rect width="30" height="45"/><path d="M10 37H20" stroke="#6c6a64" stroke-width="1.2" /><path d="M10 33H20" stroke="#6c6a64" stroke-width="1.2" /><path d="M15 29C17.5 29 19.5 27 19.5 24.5C19.5 22 17.5 20 15 20C12.5 20 10.5 22 10.5 24.5C10.5 25.5 10.9 26.5 11.5 27.2" stroke="#6c6a64" stroke-width="1.2" /><path d="M15 29V31" stroke="#6c6a64" stroke-width="1.2" /><circle cx="15" cy="33" r="0.8" fill="#6c6a64"/></svg>`;
     const selectedListPlaceholderSvg = `<svg width="65" height="97" viewBox="0 0 65 97" fill="none" xmlns="http://www.w3.org/2000/svg" class="placeholder-svg"><rect width="65" height="97"/><path d="M22 80H43" stroke="#6c6a64" stroke-width="1.5" /><path d="M22 72H43" stroke="#6c6a64" stroke-width="1.5"/><path d="M32.5 65C36.9 65 40.5 61.4 40.5 57C40.5 52.6 36.9 49 32.5 49C28.1 49 24.5 52.6 24.5 57C24.5 58.9 25.2 60.6 26.3 61.8" stroke="#6c6a64" stroke-width="1.8" /><path d="M32.5 65V68" stroke="#6c6a64" stroke-width="1.8" /><circle cx="32.5" cy="72" r="1.5" fill="#6c6a64"/></svg>`;
 
-    // --- New Manual Entry Placeholder SVG Generator ---
+    // --- Manual Entry Placeholder SVG Generator ---
     function generateManualPlaceholderSvg(title = "Manual Entry") {
-        // Basic sanitization and truncation for SVG text
-        let displayText = title.replace(/</g, '').replace(/>/g, ''); // Remove angle brackets
-        if (displayText.length > 15) displayText = displayText.substring(0, 14) + '…'; // Truncate
+        let displayText = title.replace(/</g, '').replace(/>/g, '');
+        if (displayText.length > 15) displayText = displayText.substring(0, 14) + '…';
         let displayText2 = "";
          if (title.length > 15) {
             displayText2 = title.substring(15);
              if (displayText2.length > 15) displayText2 = displayText2.substring(0, 14) + '…';
          }
-
-        // Simple book shape with text
         return `<svg width="65" height="97" viewBox="0 0 65 97" fill="none" xmlns="http://www.w3.org/2000/svg" class="manual-placeholder-svg">
                     <rect x="1" y="1" width="63" height="95" fill="#e0dccf" stroke="#a09c91" stroke-width="1"/>
                     <rect x="8" y="10" width="49" height="18" fill="#f0ede6" />
-                    <text x="12" y="23" font-size="12px" text-anchor="start">${displayText}</text>
-                     ${displayText2 ? `<text x="12" y="38" font-size="12px" text-anchor="start">${displayText2}</text>` : ''}
+                    <text x="12" y="23" font-size="12px" text-anchor="start">${escapeHtmlBasic(displayText)}</text>
+                     ${displayText2 ? `<text x="12" y="38" font-size="12px" text-anchor="start">${escapeHtmlBasic(displayText2)}</text>` : ''}
                      <rect x="8" y="65" width="49" height="3" fill="#c88e37" />
                     <rect x="8" y="75" width="49" height="3" fill="#a09c91" />
                 </svg>`;
     }
-
 
     // --- Utility ---
     function debounce(func, delay) { return function(...args) { clearTimeout(searchTimeoutId); searchTimeoutId = setTimeout(() => func.apply(this, args), delay); }; }
     function getPollIdFromUrl() { const params = new URLSearchParams(window.location.search); return params.get('pollId'); }
     function sanitizeKey(key) { return key.replace(/[.$#[\]/]/g, '_'); }
     function createUniqueKey(prefix = 'key_') { return prefix + Date.now() + '_' + Math.random().toString(36).substring(2, 9); }
+    function escapeHtmlBasic(str) {
+        if (typeof str !== 'string') str = String(str);
+        return str.replace(/&/g, "&").replace(/</g, "<").replace(/>/g, ">").replace(/"/g, """).replace(/'/g, "'");
+    }
 
     // --- Search & Close Results ---
     async function performSearch() {
@@ -471,7 +539,6 @@
     const debouncedSearch = debounce(performSearch, 450);
     searchInput.addEventListener('input', debouncedSearch);
 
-
     function displaySearchResults(books) {
         searchResultsDiv.innerHTML = '';
         if (!books || books.length === 0) {
@@ -488,35 +555,25 @@
             const isbn = book.isbn ? book.isbn[0] : null;
             const isSelected = selectedBooks.some(b => b.key === bookKey);
 
-            // Helper to escape characters for JS string literals within HTML attributes
             const escapeForJsString = (str) => {
-                if (typeof str !== 'string') str = String(str); // Ensure it's a string
-                return str.replace(/\\/g, '\\\\') // Escape backslashes first
-                          .replace(/'/g, "\\'")  // Escape single quotes
-                          .replace(/"/g, '\\"'); // Escape double quotes
+                if (typeof str !== 'string') str = String(str || '');
+                return str.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '\\"');
             };
 
-            // Escape data needed for the onclick function call
             const escapedKey = escapeForJsString(bookKey);
             const escapedTitle = escapeForJsString(title);
             const escapedAuthors = escapeForJsString(authors);
-            const escapedCoverId = escapeForJsString(coverId || '');
+            const escapedCoverId = escapeForJsString(coverId);
             const escapedPageCount = escapeForJsString(pageCount);
-            const escapedIsbn = escapeForJsString(isbn || '');
+            const escapedIsbn = escapeForJsString(isbn);
 
-            // Helper for basic HTML escaping for display purposes
-            const escapeHtmlBasic = (str) => {
-                 if (typeof str !== 'string') str = String(str);
-                 return str.replace(/</g, "<").replace(/>/g, ">");
-            }
             const displayTitle = escapeHtmlBasic(title);
             const displayAuthors = escapeHtmlBasic(authors);
 
             const bookElement = document.createElement('div');
             bookElement.className = `book-item${isSelected ? ' selected' : ''}`;
-            bookElement.dataset.key = bookKey; // Keep this for potential future use or styling
+            bookElement.dataset.key = bookKey;
 
-            // Construct the onclick string carefully with escaped values
             const onclickAttr = `selectBook(this, '${escapedKey}', '${escapedTitle}', '${escapedAuthors}', '${escapedCoverId}', '${escapedPageCount}', '${escapedIsbn}')`;
 
             bookElement.innerHTML = `
@@ -533,17 +590,16 @@
         });
     }
 
-
     function closeSearchResults() {
         searchResultsDiv.innerHTML = '';
         searchStatusDiv.textContent = '';
     }
 
-
-    // --- Manual Book Addition (Title + Author) ---
+    // --- Manual Book Addition ---
     function addManualEntry() {
         const title = manualTitleInput.value.trim();
-        const author = manualAuthorInput.value.trim() || "N/A"; // Use new input, default to N/A
+        const author = manualAuthorInput.value.trim() || "N/A";
+        const link = manualLinkInput.value.trim();
         manualAddStatusDiv.textContent = '';
 
         if (!title) {
@@ -551,9 +607,11 @@
             manualTitleInput.focus();
             return;
         }
-
-        // Check for duplicates based only on Title for manual entries now? Or Title+Author?
-        // Let's check Title+Author for better accuracy.
+        if (link && !link.startsWith('http://') && !link.startsWith('https://')) {
+            manualAddStatusDiv.textContent = 'INVALID URL (use http/https).';
+            manualLinkInput.focus();
+            return;
+        }
         const alreadyExists = selectedBooks.some(b =>
             b.isManual && b.title.toLowerCase() === title.toLowerCase() && b.authors.toLowerCase() === author.toLowerCase()
         );
@@ -564,160 +622,139 @@
 
         const manualKey = createUniqueKey('manual_');
         const bookData = {
-            key: manualKey, title: title, authors: author, // Store author correctly
-            freeformText: '', // No longer used for separate info
-            isCustom: true, // Still custom
-            isFreeform: false, // No longer 'freeform' structure, just manual
-            isManual: true, // Add a specific flag for manual entries
-            coverId: null, pageCount: 'N/A', isbn: null, link: '', votes: 0
+            key: manualKey, title: title, authors: author,
+            link: link || '', isCustom: true, isFreeform: false, isManual: true,
+            coverId: null, pageCount: 'N/A', isbn: null, votes: 0
         };
         selectedBooks.push(bookData);
         displaySelectedBooksAdmin();
-        manualTitleInput.value = ''; manualAuthorInput.value = ''; // Clear both fields
+        manualTitleInput.value = ''; manualAuthorInput.value = ''; manualLinkInput.value = '';
+        manualTitleInput.focus();
     }
-
 
     // --- Selection (Admin View) ---
     function selectBook(buttonElement, key, title, authors, coverId, pageCount, isbn) {
-        // Note: The passed arguments (title, authors etc.) are now the correctly escaped versions
-        // if they came from the onclick attribute. However, we store the *original* intent.
-        // It's better practice to pass unescaped data if possible (e.g., using data attributes and event listeners),
-        // but given the current structure, we'll store the data as intended for the application logic.
-        // The escaping was primarily for the HTML attribute syntax.
-
         if (selectedBooks.some(b => b.key === key)) return;
 
-        const link = key.startsWith('/works/') ? `https://openlibrary.org${key}` : '';
+        const openLibraryLink = key.startsWith('/works/') ? `https://openlibrary.org${key}` : '';
 
-        // Store the data as it should be logically represented, not the JS-escaped version
         const bookData = {
-            key: key, // Use the passed key directly
-            title: title, // Use the passed title directly
-            authors: authors, // Use the passed authors directly
-            coverId: coverId || null, // Handle empty string from escape
-            pageCount: pageCount, // Use passed pageCount
-            isbn: isbn || null, // Handle empty string from escape
-            isCustom: false,
-            isFreeform: false,
-            isManual: false, // Explicitly not manual
-            link: link,
-            votes: 0
+            key: key, title: title, authors: authors,
+            coverId: coverId || null, pageCount: pageCount, isbn: isbn || null,
+            isCustom: false, isFreeform: false, isManual: false,
+            link: openLibraryLink, votes: 0
          };
         selectedBooks.push(bookData);
         displaySelectedBooksAdmin();
 
-        // Update button state in search results
         buttonElement.textContent = '.Sel.';
         buttonElement.disabled = true;
         const bookItem = buttonElement.closest('.book-item');
-        if (bookItem) {
-            bookItem.classList.add('selected');
-        }
+        if (bookItem) { bookItem.classList.add('selected'); }
     }
 
     function removeBook(keyToRemove) {
         selectedBooks = selectedBooks.filter(book => book.key !== keyToRemove);
         displaySelectedBooksAdmin();
-        // Update button state in search results if the removed book is visible there
         const bookItemInSearch = searchResultsDiv.querySelector(`.book-item[data-key="${keyToRemove}"]`);
         if(bookItemInSearch){
-            const btn = bookItemInSearch.querySelector('button'); // Find the button inside
-            if(btn){
-                btn.textContent = '+ Add';
-                btn.disabled = false;
-            }
+            const btn = bookItemInSearch.querySelector('button');
+            if(btn){ btn.textContent = '+ Add'; btn.disabled = false; }
             bookItemInSearch.classList.remove('selected');
         }
     }
 
     function generateLinksHtmlAdmin(book) {
-        // No links for manual entries
-        if (book.isManual) { return `<div class="links"></div>`; } // Return empty div for spacing
+        if (book.isManual) { return `<div class="links"></div>`; }
 
         const openLibraryLink = book.link ? `<a href="${book.link}" target="_blank" rel="noopener">OL</a>` : '';
         const goodreadsQuery = book.isbn ? book.isbn : `${book.title} ${book.authors}`;
         const goodreadsSearchLink = `https://www.goodreads.com/search?q=${encodeURIComponent(goodreadsQuery)}`;
-        // Ensure title/authors exist and are not placeholder values before generating GR link without ISBN
         const showGr = book.isbn || (book.title && book.title !== '???' && book.authors && book.authors !== '???');
         const grLink = showGr ? `<a href="${goodreadsSearchLink}" target="_blank" rel="noopener">GR</a>` : '';
         const separator = openLibraryLink && grLink ? ' | ' : '';
 
-        // Always return the div, even if empty, for consistent spacing controlled by CSS
         return `<div class="links">${openLibraryLink}${separator}${grLink}</div>`;
     }
 
-    // ---vvv--- MODIFIED FUNCTION ---vvv---
+    // --- ---vvv--- UPDATED Display Selected Books ---vvv--- ---
     function displaySelectedBooksAdmin() {
         selectedBooksListDiv.innerHTML = '';
-        pollShareArea.style.display = 'none'; copyStatusDiv.textContent = '';
+        pollShareArea.style.display = 'none';
+        copyStatusDiv.textContent = ''; // Clear poll link copy status
+        copyInfoStatus.textContent = ''; // Clear single book copy status
 
-        if (selectedBooks.length === 0) {
+        const hasBooks = selectedBooks.length > 0;
+        startPollBtn.disabled = !hasBooks;
+
+        if (!hasBooks) {
             selectedBooksListDiv.innerHTML = '<p class="placeholder-text"></p>';
-            startPollBtn.disabled = true; return;
+            return;
         }
 
-        startPollBtn.disabled = false;
         selectedBooks.forEach(book => {
             const cardElement = document.createElement('div');
             cardElement.classList.add('selected-card');
             let cardContent = '';
             let coverHtml = '';
 
-            // Helper for basic HTML escaping for display purposes
-            const escapeHtmlBasic = (str) => {
-                 if (typeof str !== 'string') str = String(str);
-                 return str.replace(/</g, "<").replace(/>/g, ">");
-            }
+            // Escape book key for use in onclick attribute
+            const escapedKey = escapeHtmlBasic(book.key.replace(/'/g, "\\'"));
 
-            if (book.isManual) { // Manual Entry with Title + Author
+            if (book.isManual) { // Manual Entry
                 cardElement.classList.add('manual-entry');
                 coverHtml = generateManualPlaceholderSvg(book.title);
-                // FIX: Added empty <div class="links"></div> for spacing consistency
+                const manualLinkHtml = book.link
+                    ? `<div class="links"><a href="${escapeHtmlBasic(book.link)}" target="_blank" rel="noopener">User Link</a></div>`
+                    : '<div class="links"></div>';
+
                 cardContent = `
                     ${coverHtml}
                     <h3>${escapeHtmlBasic(book.title)}</h3>
                     <p><em>${escapeHtmlBasic(book.authors)}</em></p>
                     <p>(Manual)</p>
-                    <div class="links"></div> <!-- Ensures consistent spacing before button -->
-                    <button class="btn-remove" onclick="removeBook('${book.key}')">Remove</button>
+                    ${manualLinkHtml}
+                    <div class="card-actions">
+                        <button class="btn-copy-single" onclick="copySingleBookInfo('${escapedKey}')">Copy</button>
+                        <button class="btn-remove" onclick="removeBook('${escapedKey}')">Remove</button>
+                    </div>
                 `;
             } else { // Standard Entry
                  coverHtml = book.coverId ? `<img src="https://covers.openlibrary.org/b/id/${book.coverId}-M.jpg" alt="${escapeHtmlBasic(book.title)}" loading="lazy">` : selectedListPlaceholderSvg;
                 const pageCountDisplay = (book.pageCount && book.pageCount !== 'N/A') ? `${book.pageCount}p` : '';
-                const linksHtml = generateLinksHtmlAdmin(book); // This *always* returns <div class="links">...</div>
+                const linksHtml = generateLinksHtmlAdmin(book);
                  cardContent = `
                     ${coverHtml}
                     <h3>${escapeHtmlBasic(book.title)}</h3>
                     <p><em>${escapeHtmlBasic(book.authors)}</em></p>
                     ${pageCountDisplay ? `<p>${pageCountDisplay}</p>` : ''}
-                    ${linksHtml} <!-- This div provides spacing -->
-                    <button class="btn-remove" onclick="removeBook('${book.key}')">Remove</button>
+                    ${linksHtml}
+                    <div class="card-actions">
+                        <button class="btn-copy-single" onclick="copySingleBookInfo('${escapedKey}')">Copy</button>
+                        <button class="btn-remove" onclick="removeBook('${escapedKey}')">Remove</button>
+                    </div>
                 `;
             }
             cardElement.innerHTML = cardContent;
             selectedBooksListDiv.appendChild(cardElement);
         });
     }
-    // ---^^^--- END OF MODIFIED FUNCTION ---^^^---
+    // --- ---^^^--- END UPDATED Display Selected Books ---^^^--- ---
 
     // --- Poll Creation (Firebase) ---
     async function startPoll() {
+        if (!database) { startPollStatus.textContent = "DB ERROR"; return; }
         if (selectedBooks.length === 0) { startPollStatus.textContent = "NEED BOOKS"; return; }
         startPollStatus.textContent = ""; startPollBtn.disabled = true; startPollBtn.textContent = "Working...";
+        pollShareArea.style.display = 'none';
+
         const pollOptions = {};
         selectedBooks.forEach((book) => {
-            const safeKey = sanitizeKey(book.key); // Sanitize the key used for Firebase object keys
+            const safeKey = sanitizeKey(book.key);
             pollOptions[safeKey] = {
-                // Store the actual data, not escaped versions
-                title: book.title,
-                author: book.authors, // Use 'authors' field from selectedBooks
-                pageCount: book.pageCount,
-                link: book.link,
-                isbn: book.isbn,
-                coverId: book.coverId,
-                isCustom: book.isCustom,
-                isManual: book.isManual || false, // Store the manual flag
-                votes: 0
+                title: book.title, author: book.authors, pageCount: book.pageCount,
+                link: book.link, isbn: book.isbn, coverId: book.coverId,
+                isCustom: book.isCustom, isManual: book.isManual || false, votes: 0
             };
         });
         const dateStr = new Date().toISOString().split('T')[0];
@@ -730,19 +767,20 @@
             const baseUrl = window.location.href.split('?')[0].split('#')[0];
             const shareUrl = `${baseUrl}?pollId=${currentPollId}`;
             pollShareLink.textContent = shareUrl; pollShareLink.href = shareUrl;
-            pollShareArea.style.display = 'block'; startPollBtn.textContent = "Poll Ready!";
+            pollShareArea.style.display = 'block';
+            startPollBtn.textContent = "Poll Ready!"; // Keep disabled
             copyStatusDiv.textContent = ''; startPollStatus.textContent = "";
         } catch (error) {
             console.error("Poll Start Err:", error);
             startPollStatus.textContent = "POLL ERR.";
-            startPollBtn.disabled = false; startPollBtn.textContent = "MAKE_POLL"; // Reset button text
+            startPollBtn.disabled = false; startPollBtn.textContent = "MAKE_POLL";
         }
     }
 
-     function copyPollLink() {
+    function copyPollLink() {
         const link = pollShareLink.textContent;
         navigator.clipboard.writeText(link).then(() => {
-            copyStatusDiv.textContent = "COPIED!"; copyStatusDiv.style.color = 'var(--success-color)';
+            copyStatusDiv.textContent = "POLL LINK COPIED!"; copyStatusDiv.style.color = 'var(--success-color)';
             setTimeout(() => { copyStatusDiv.textContent = ''; }, 2500);
         }).catch(err => {
             copyStatusDiv.textContent = "FAIL."; copyStatusDiv.style.color = 'var(--danger-color)';
@@ -750,145 +788,214 @@
         });
      }
 
-    // --- Poll Loading & Display (Voter View) ---
-    function loadPoll(pollId) {
-        adminAreaDiv.style.display = 'none'; pollViewDiv.style.display = 'block';
-        const pollRef = database.ref(`polls/${pollId}`);
-        if (pollDataListener) { database.ref(`polls/${currentPollId}`).off('value', pollDataListener); } // Clean previous listener
+    // --- ---vvv--- NEW Copy Single Book Info ---vvv--- ---
+    function copySingleBookInfo(bookKey) {
+        const book = selectedBooks.find(b => b.key === bookKey);
+        if (!book) {
+            copyInfoStatus.textContent = "BOOK NOT FOUND?";
+            copyInfoStatus.style.color = "var(--danger-color)";
+            console.error("Could not find book with key:", bookKey);
+            return;
+        }
 
-        pollTitleH1.textContent = "LOADING POLL..."; // Initial loading state
-        pollOptionsDiv.innerHTML = '<p class="placeholder-text">[[ Waiting For Data ]]</p>'; // Initial loading state
+        const title = book.title || "Unknown Title";
+        const author = book.authors || "Unknown Author";
+        let bestLink = "";
+
+        // Determine best link (same logic as before)
+        if (book.isManual && book.link) {
+            bestLink = book.link;
+        } else if (book.isbn) {
+            bestLink = `https://www.goodreads.com/search?q=${encodeURIComponent(book.isbn)}`;
+        } else if (!book.isManual && book.link) {
+            bestLink = book.link; // OpenLibrary link
+        }
+
+        let infoString = `${title} - ${author}\n`;
+        if (bestLink) {
+            infoString += `Link: ${bestLink}`;
+        }
+
+        copyInfoTextarea.value = infoString.trim(); // Put text in hidden textarea
+        copyInfoTextarea.select();
+
+        try {
+             navigator.clipboard.writeText(copyInfoTextarea.value).then(() => {
+                 copyInfoStatus.textContent = `"${title}" INFO COPIED!`; // Provide specific feedback
+                 copyInfoStatus.style.color = "var(--success-color)";
+                 setTimeout(() => { copyInfoStatus.textContent = ''; }, 3000);
+             }).catch(err => { throw err; });
+        } catch (err) {
+            console.error('Copy Info Failed:', err);
+            copyInfoStatus.textContent = "COPY FAILED";
+            copyInfoStatus.style.color = "var(--danger-color)";
+             try { // Fallback
+                document.execCommand('copy');
+                copyInfoStatus.textContent = `"${title}" INFO COPIED! (Fallback)`;
+                copyInfoStatus.style.color = "var(--success-color)";
+                setTimeout(() => { copyInfoStatus.textContent = ''; }, 3000);
+            } catch (execErr) {
+                 console.error('Fallback Copy Failed:', execErr);
+                 copyInfoStatus.textContent = "COPY FAILED";
+                 copyInfoStatus.style.color = "var(--danger-color)";
+            }
+        }
+        window.getSelection().removeAllRanges(); // Deselect
+    }
+    // --- ---^^^--- END NEW Copy Single Book Info ---^^^--- ---
+
+
+    // --- Poll Loading & Display ---
+    function loadPoll(pollId) {
+        if (!database) {
+             pollTitleH1.textContent = "DATABASE ERROR";
+             pollOptionsDiv.innerHTML = '<p class="placeholder-text error">[[ Cannot connect to Database ]]</p>';
+             return;
+        }
+        adminAreaDiv.style.display = 'none';
+        pollViewDiv.style.display = 'block';
+        votesRevealed = false;
+        pollViewDiv.classList.remove('votes-revealed');
+        revealVotesArea.style.display = 'none';
+        revealVotesBtn.disabled = false;
+        revealVotesBtn.textContent = 'Reveal Votes';
+
+        const pollRef = database.ref(`polls/${pollId}`);
+        if (pollDataListener) { database.ref(`polls/${currentPollId}`).off('value', pollDataListener); }
+
+        pollTitleH1.textContent = "LOADING POLL...";
+        pollOptionsDiv.innerHTML = '<p class="placeholder-text">[[ Waiting For Data ]]</p>';
 
         pollDataListener = (snapshot) => {
             if (!snapshot.exists()) {
                 pollTitleH1.textContent = "POLL NOT FOUND";
                 pollOptionsDiv.innerHTML = '<p class="placeholder-text error">[[ Invalid Poll ID ]]</p>';
+                revealVotesArea.style.display = 'none';
                 console.error("Poll data not found for ID:", pollId);
                 return;
             }
             currentPollData = snapshot.val();
             pollTitleH1.textContent = currentPollData.title || "BOOK VOTE";
-            pollOptionsDiv.innerHTML = ''; // Clear previous options / placeholder
+            pollOptionsDiv.innerHTML = '';
+
+            const existingCards = pollOptionsDiv.querySelectorAll('.poll-option-card.winner');
+            existingCards.forEach(card => card.classList.remove('winner'));
 
             if (!currentPollData.options || Object.keys(currentPollData.options).length === 0) {
                  pollOptionsDiv.innerHTML = '<p class="placeholder-text">[[ No Books In Poll ]]</p>';
+                 revealVotesArea.style.display = 'none';
                  return;
             }
 
-             // Helper for basic HTML escaping for display purposes
-            const escapeHtmlBasic = (str) => {
-                 if (typeof str !== 'string') str = String(str);
-                 return str.replace(/</g, "<").replace(/>/g, ">");
-            }
+            revealVotesArea.style.display = 'block';
 
             Object.entries(currentPollData.options).forEach(([key, book]) => {
-                // Note: 'key' here is the sanitized key used in Firebase ('manual_...', etc.)
                 const cardElement = document.createElement('div');
                 cardElement.classList.add('poll-option-card');
+                cardElement.dataset.key = key;
+
                 let cardContent = '';
                 let coverHtml = '';
+                const voteCount = book.votes || 0;
+                let linksHtml = '';
 
                 if (book.isManual) { // Manual entry
-                     coverHtml = generateManualPlaceholderSvg(book.title); // Generate manual cover
+                     coverHtml = generateManualPlaceholderSvg(book.title);
+                     linksHtml = book.link
+                         ? `<div class="links"><a href="${escapeHtmlBasic(book.link)}" target="_blank" rel="noopener">User Link</a></div>`
+                         : '<div class="links"></div>';
+
                      cardContent = `
                          <div class="poll-card-content">
                              ${coverHtml}
                              <h4>${escapeHtmlBasic(book.title)}</h4>
-                             <p><em>${escapeHtmlBasic(book.author)}</em></p> <!-- Use 'author' from Firebase -->
-                              <p>(Manual)</p>
+                             <p><em>${escapeHtmlBasic(book.author)}</em></p>
+                             <p>(Manual)</p>
+                             ${linksHtml}
                          </div>
                          <div class="vote-area">
-                             <span class="vote-count" id="votes-${key}">${book.votes || 0} Votes</span>
+                             <span class="vote-count" id="votes-${key}">${voteCount} Votes</span>
                              <button class="btn-vote" id="btn-${key}" onclick="castVote('${key}')">Vote</button>
                          </div>`;
                 } else { // Standard entry
                      coverHtml = book.coverId ? `<img src="https://covers.openlibrary.org/b/id/${book.coverId}-M.jpg" alt="${escapeHtmlBasic(book.title)}" loading="lazy">`
-                                                   : `<div style="width:65px; height:97px; background-color:var(--border-color); display:inline-block; line-height: 97px; text-align: center; color: var(--subtle-text-color); font-size: 0.8em;">N/A</div>`; // Inline placeholder for poll view
+                                                   : `<div style="width:65px; height:97px; background-color:var(--border-color); display:inline-block; line-height: 97px; text-align: center; color: var(--subtle-text-color); font-size: 0.8em;">N/A</div>`;
                     const pageCountDisplay = (book.pageCount && book.pageCount !== 'N/A') ? `${book.pageCount}p` : '';
-                    const linksHtml = generateLinksHtmlVoter(book); // Pass the book object from Firebase data
+                    linksHtml = generateLinksHtmlVoter(book);
                     cardContent = `
                         <div class="poll-card-content">
                             ${coverHtml}
                             <h4>${escapeHtmlBasic(book.title)}</h4>
-                            <p><em>${escapeHtmlBasic(book.author)}</em></p> <!-- Use 'author' from Firebase -->
+                            <p><em>${escapeHtmlBasic(book.author)}</em></p>
                             ${pageCountDisplay ? `<p>${pageCountDisplay}</p>` : ''}
                             ${linksHtml}
                         </div>
                         <div class="vote-area">
-                            <span class="vote-count" id="votes-${key}">${book.votes || 0} Votes</span>
-                            <button class="btn-vote" id="btn-${key}" onclick="castVote('${key}')">Vote</button>
-                        </div>`;
+                             <span class="vote-count" id="votes-${key}">${voteCount} Votes</span>
+                             <button class="btn-vote" id="btn-${key}" onclick="castVote('${key}')">Vote</button>
+                         </div>`;
                 }
                  cardElement.innerHTML = cardContent;
                  pollOptionsDiv.appendChild(cardElement);
             });
-            checkIfVoted(); // Check and update button states after rendering
+
+            if (votesRevealed) { applyWinnerHighlighting(); }
+            checkIfVoted();
         };
         pollRef.on('value', pollDataListener, (error) => {
              console.error("Firebase poll read failed:", error);
              pollTitleH1.textContent = "ERROR LOADING POLL";
              pollOptionsDiv.innerHTML = '<p class="placeholder-text error">[[ Could not load poll data ]]</p>';
              pollVoteStatusDiv.textContent = "LOAD ERROR"; pollVoteStatusDiv.style.color = "var(--danger-color)";
+             revealVotesArea.style.display = 'none';
          });
     }
 
      function generateLinksHtmlVoter(book) {
-         // Takes a book object from Firebase poll data
-         if (book.isManual) { return `<div class="links"></div>`; } // No links for manual
+         if (book.isManual) { return `<div class="links"></div>`; }
 
          const openLibraryLink = book.link ? `<a href="${book.link}" target="_blank" rel="noopener">OL</a>` : '';
-         // Use 'author' field from Firebase data
          const goodreadsQuery = book.isbn ? book.isbn : `${book.title} ${book.author}`;
          const goodreadsSearchLink = `https://www.goodreads.com/search?q=${encodeURIComponent(goodreadsQuery)}`;
-         // Check title/author from Firebase data
          const showGr = book.isbn || (book.title && book.title !== '???' && book.author && book.author !== '???');
          const grLink = showGr ? `<a href="${goodreadsSearchLink}" target="_blank" rel="noopener">GR</a>` : '';
          const separator = openLibraryLink && grLink ? ' | ' : '';
 
-         // Always return the div, even if empty, for consistent spacing controlled by CSS
          return `<div class="links">${openLibraryLink}${separator}${grLink}</div>`;
      }
 
     // --- Voting ---
-    async function castVote(bookKey) { // bookKey is the sanitized Firebase key
-        if (!currentPollId) return;
+    async function castVote(bookKey) {
+        if (!database) { pollVoteStatusDiv.textContent = "DB ERROR"; return; }
+        if (!currentPollId || votesRevealed) return;
+
         const votedPollKey = `voted_${currentPollId}`;
         if (localStorage.getItem(votedPollKey)) {
             pollVoteStatusDiv.textContent = "VOTED ALREADY";
             pollVoteStatusDiv.style.color = "var(--secondary-color)";
-            disableAllVoteButtons(); // Ensure buttons are disabled
-            setTimeout(() => { pollVoteStatusDiv.textContent = checkIfVoted() ? "VOTED" : ''; }, 3000); // Reset message later
+            disableAllVoteButtons();
+            setTimeout(() => { pollVoteStatusDiv.textContent = checkIfVoted() ? "VOTED" : ''; }, 3000);
             return;
         }
-        disableAllVoteButtons(); // Disable immediately to prevent double clicks
+        disableAllVoteButtons();
         pollVoteStatusDiv.textContent = "VOTING..."; pollVoteStatusDiv.style.color = "var(--primary-color)";
         const voteRef = database.ref(`polls/${currentPollId}/options/${bookKey}/votes`);
         try {
-            // Use transaction for atomic increment
             const result = await voteRef.transaction(currentVotes => (currentVotes || 0) + 1);
             if (result.committed) {
-                 // Vote successful, update UI immediately (Firebase listener will also update)
                  pollVoteStatusDiv.textContent = "VOTE OK"; pollVoteStatusDiv.style.color = "var(--success-color)";
-                 localStorage.setItem(votedPollKey, bookKey); // Mark as voted
-                 // Update local vote count display slightly faster than waiting for listener
-                 const voteSpan = document.getElementById(`votes-${bookKey}`);
-                 if (voteSpan && result.snapshot.exists()) {
-                     voteSpan.textContent = `${result.snapshot.val()} Votes`;
-                 }
+                 localStorage.setItem(votedPollKey, bookKey);
+                 checkIfVoted();
             } else {
-                 // Transaction aborted (e.g., contention), handle gracefully
                  pollVoteStatusDiv.textContent = "VOTE FAIL"; pollVoteStatusDiv.style.color = "var(--secondary-color)";
-                 // Re-enable buttons if the vote failed and they haven't voted yet
                  checkIfVoted();
                  console.warn("Vote transaction aborted for:", bookKey);
             }
         } catch (error) {
             console.error("Vote Err:", error);
             pollVoteStatusDiv.textContent = "VOTE ERR"; pollVoteStatusDiv.style.color = "var(--danger-color)";
-            // Re-enable buttons if the vote failed and they haven't voted yet
             checkIfVoted();
         }
-        // Reset status message after a delay, showing "VOTED" if applicable
         setTimeout(() => { pollVoteStatusDiv.textContent = checkIfVoted() ? "VOTED" : ''; }, 3000);
     }
 
@@ -898,23 +1005,20 @@
      }
 
      function checkIfVoted() {
-         // Checks local storage and updates button states and status message
-         if (!currentPollId) return false; // Cannot check if poll ID isn't known
+         if (!currentPollId) return false;
          const votedPollKey = `voted_${currentPollId}`;
          const hasVoted = localStorage.getItem(votedPollKey);
-
          const buttons = pollOptionsDiv.querySelectorAll('.btn-vote');
-         if (hasVoted) {
+
+         if (hasVoted || votesRevealed) {
              buttons.forEach(button => button.disabled = true);
-             // Only set status text if it's not already showing an error/success message
-             if (!pollVoteStatusDiv.textContent || pollVoteStatusDiv.textContent === "VOTING..." || pollVoteStatusDiv.textContent === "") {
+             if (hasVoted && (!pollVoteStatusDiv.textContent || pollVoteStatusDiv.textContent === "VOTING..." || pollVoteStatusDiv.textContent === "")) {
                 pollVoteStatusDiv.textContent = "VOTED";
                 pollVoteStatusDiv.style.color = "var(--subtle-text-color)";
              }
              return true;
          } else {
              buttons.forEach(button => button.disabled = false);
-             // Clear the "VOTED" status if it was previously set
              if (pollVoteStatusDiv.textContent === "VOTED") {
                  pollVoteStatusDiv.textContent = "";
              }
@@ -922,23 +1026,60 @@
          }
      }
 
+    // --- Reveal Votes Logic ---
+    function revealVotes() {
+        if (!currentPollData || !currentPollData.options || votesRevealed) { return; }
+        votesRevealed = true;
+        pollViewDiv.classList.add('votes-revealed');
+        applyWinnerHighlighting();
+        revealVotesBtn.textContent = 'Results Shown';
+        revealVotesBtn.disabled = true;
+        disableAllVoteButtons();
+        if (!localStorage.getItem(`voted_${currentPollId}`)) {
+            pollVoteStatusDiv.textContent = "POLL CLOSED";
+             pollVoteStatusDiv.style.color = "var(--subtle-text-color)";
+        }
+    }
+
+    function applyWinnerHighlighting() {
+         if (!currentPollData || !currentPollData.options) return;
+         let maxVotes = -1;
+         Object.values(currentPollData.options).forEach(book => {
+             maxVotes = Math.max(maxVotes, book.votes || 0);
+         });
+
+         const allCards = pollOptionsDiv.querySelectorAll('.poll-option-card');
+         allCards.forEach(card => card.classList.remove('winner'));
+
+         if (maxVotes > 0) {
+             Object.entries(currentPollData.options).forEach(([key, book]) => {
+                 if ((book.votes || 0) === maxVotes) {
+                     const winnerCard = pollOptionsDiv.querySelector(`.poll-option-card[data-key="${key}"]`);
+                     if (winnerCard) { winnerCard.classList.add('winner'); }
+                 }
+             });
+         }
+    }
+
     // --- Initialization ---
     window.onload = () => {
+        if (typeof database === 'undefined') {
+            console.error("Database object not initialized. Halting execution.");
+            return;
+        }
         currentPollId = getPollIdFromUrl();
         if (currentPollId) {
-            loadPoll(currentPollId); // Load poll view
-        }
-        else {
-            adminAreaDiv.style.display = 'block'; // Show admin view
+            loadPoll(currentPollId);
+        } else {
+            adminAreaDiv.style.display = 'block';
             pollViewDiv.style.display = 'none';
-            displaySelectedBooksAdmin(); // Display any potentially cached state (unlikely needed but safe)
+            displaySelectedBooksAdmin(); // Initial display & button state check
         }
     };
 
     // --- Listener Cleanup ---
     window.addEventListener('beforeunload', () => {
-        // Detach Firebase listener when the page is unloaded
-        if (pollDataListener && currentPollId) {
+        if (database && pollDataListener && currentPollId) {
              try {
                  const pollRef = database.ref(`polls/${currentPollId}`);
                  pollRef.off('value', pollDataListener);
