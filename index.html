@@ -66,6 +66,7 @@
         .placeholder-text{color:#999;text-align:center;padding:20px 0;font-style:italic;font-size:.85em}
         #pollShareArea{margin-top:20px;padding:15px;background-color:#e9f5e9;border:1px solid #badbcc;border-radius:6px;text-align:center}
         #pollShareLink{font-weight:600;word-break:break-all;display:inline-block;margin-top:5px;background:#fff;padding:5px 10px;border:1px solid #ccc;border-radius:4px;}
+        #copyStatus { font-size: 0.8em; min-height: 1.2em; margin-top: 5px;} /* Style for copy status */
         #adminArea{display:block} /* Show by default, hide if pollId exists */
         #pollView{display:none} /* Hide by default, show if pollId exists */
     </style>
@@ -92,7 +93,7 @@
             <h2>2. Selected Books</h2>
             <div id="selectedBooksList"> <p class="placeholder-text">No books selected.</p> </div>
             <div style="text-align: center; margin-top: 25px;"> <button id="startPollBtn" onclick="startPoll()">Start Poll & Get Share Link</button> </div>
-            <div id="pollShareArea" style="display: none;"> Poll Created! Share this link with your club: <br><span id="pollShareLink"></span> <br><button onclick="copyPollLink()" style="margin-top:10px; background-color: var(--primary-color)">Copy Link</button> <div id="copyStatus" class="status-message" style="font-size:0.8em;"></div> </div>
+            <div id="pollShareArea" style="display: none;"> Poll Created! Share this link with your club: <br><a id="pollShareLink" href="#" target="_blank" rel="noopener noreferrer"></a> <br><button onclick="copyPollLink()" style="margin-top:10px; background-color: var(--primary-color)">Copy Link</button> <div id="copyStatus" class="status-message"></div> </div>
             <div id="startPollStatus" class="status-message error"></div>
         </section>
     </div>
@@ -110,29 +111,36 @@
 </div>
 
 <script>
-    // --- !! IMPORTANT !! PASTE YOUR FIREBASE CONFIG HERE ---
+    // ---vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv---
+    // --- YOUR SPECIFIC FIREBASE CONFIGURATION IS BELOW ---
+    // ---   Verify the databaseURL is correct!          ---
+    // ---vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv---
     const firebaseConfig = {
-        apiKey: "YOUR_API_KEY",                 // Replace with your value
-        authDomain: "YOUR_PROJECT_ID.firebaseapp.com", // Replace with your value
-        databaseURL: "https://YOUR_PROJECT_ID-default-rtdb.firebaseio.com", // Replace with your value (check region if not default)
-        projectId: "YOUR_PROJECT_ID",          // Replace with your value
-        storageBucket: "YOUR_PROJECT_ID.appspot.com", // Replace with your value
-        messagingSenderId: "YOUR_SENDER_ID",    // Replace with your value
-        appId: "YOUR_APP_ID",                 // Replace with your value
-        // measurementId: "OPTIONAL_MEASUREMENT_ID" // Optional, often not needed for RTDB only
+      apiKey: "AIzaSyAPi4OmZieXOwy3fDhXPPt9ac_KCE0_hkw",
+      authDomain: "book-klubben-236e1.firebaseapp.com",
+      // !!! VERIFY THIS URL IN YOUR FIREBASE CONSOLE (Realtime Database section) !!!
+      databaseURL: "https://book-klubben-236e1-default-rtdb.firebaseio.com",
+      projectId: "book-klubben-236e1",
+      storageBucket: "book-klubben-236e1.appspot.com", // Corrected name
+      messagingSenderId: "245694652120",
+      appId: "1:245694652120:web:f550759de576dea4c7c1ad"
     };
-    // ------------------------------------------------------
+    // ---^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^---
+    // --- END OF YOUR FIREBASE CONFIGURATION            ---
+    // ---^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^---
+
 
     // --- Initialize Firebase ---
+    // Note: Using older Firebase v8 syntax as per included SDK script tags
     try {
          if (!firebase.apps.length) { // Prevent re-initialization
              firebase.initializeApp(firebaseConfig);
          }
     } catch(e) {
          console.error("Firebase initialization error:", e);
-         alert("Could not initialize Firebase. Please check your configuration.");
+         alert("Could not initialize Firebase. Check configuration and ensure databaseURL is correct.");
     }
-    const database = firebase.database();
+    const database = firebase.database(); // Use v8 database namespace
 
     // --- DOM Elements ---
     const searchInput = document.getElementById('searchInput');
@@ -158,6 +166,7 @@
     let searchTimeoutId = null;
     let currentPollId = null;
     let currentPollData = null; // Store fetched poll data
+    let pollDataListener = null; // To store the listener function
 
     // --- Placeholder SVGs ---
     const selectedListPlaceholderSvg = `<svg width="65" height="97" viewBox="0 0 65 97" fill="none" xmlns="http://www.w3.org/2000/svg" class="placeholder-svg"><rect width="65" height="97" rx="3" fill="#E0E0E0"/><path d="M22 78H43" stroke="#BDBDBD" stroke-width="1.4" stroke-linecap="round"/><path d="M22 70H43" stroke="#BDBDBD" stroke-width="1.4" stroke-linecap="round"/><path d="M32.5 62C36.6421 62 40 58.6421 40 54.5C40 50.3579 36.6421 47 32.5 47C28.3579 47 25 50.3579 25 54.5C25 56.5 25.7 58.2 26.8 59.5" stroke="#BDBDBD" stroke-width="1.8" stroke-linecap="round"/><path d="M32.5 62V65" stroke="#BDBDBD" stroke-width="1.8" stroke-linecap="round"/><circle cx="32.5" cy="69" r="1.2" fill="#BDBDBD"/></svg>`;
@@ -168,7 +177,7 @@
     function getPollIdFromUrl() { const params = new URLSearchParams(window.location.search); return params.get('pollId'); }
 
     // --- Search ---
-    async function performSearch() { /* ... Same as previous version ... */
+    async function performSearch() {
         const query = searchInput.value.trim();
         searchResultsDiv.innerHTML = '';
         if (!query) { searchStatusDiv.innerHTML = ''; return; }
@@ -185,7 +194,7 @@
     const debouncedSearch = debounce(performSearch, 400);
     searchInput.addEventListener('input', debouncedSearch);
 
-    function displaySearchResults(books) { /* ... Same as previous version, but ensure selectBook call is correct ... */
+    function displaySearchResults(books) {
         if (!books || books.length === 0) { searchResultsDiv.innerHTML = '<p class="placeholder-text" style="padding: 8px 0;">No matches.</p>'; return; }
         books.forEach(book => {
             const title=book.title||'Unknown Title', authors=book.author_name?book.author_name.join(', '):'Unknown Author', coverId=book.cover_i, coverHtml=coverId?`<img src="https://covers.openlibrary.org/b/id/${coverId}-S.jpg" alt="" loading="lazy">`:searchResultPlaceholderSvg, pageCount=book.number_of_pages_median||'N/A', bookKey=book.key, isbn=book.isbn?book.isbn[0]:null, isSelected=selectedBooks.some(b=>b.key===bookKey);
@@ -196,41 +205,41 @@
     }
 
     // --- Custom Book ---
-    function addCustomBook() { /* ... Same as previous version ... */
+    function addCustomBook() {
         const title = customTitleInput.value.trim(), author = customAuthorInput.value.trim()||'Unknown Author';
         customAddStatusDiv.textContent=''; if (!title) { customAddStatusDiv.textContent = 'Title required.'; customTitleInput.focus(); return; }
         const alreadyExists = selectedBooks.some(b=>b.title.toLowerCase() === title.toLowerCase() && b.authors.toLowerCase() === author.toLowerCase());
         if (alreadyExists) { customAddStatusDiv.textContent = 'Already selected.'; return; }
         const customKey = 'custom_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7);
-        const bookData = { key: customKey, title, authors: author, coverId: null, pageCount: 'N/A', isbn: null, isCustom: true, link: '' }; // Add link field for consistency
+        const bookData = { key: customKey, title, authors: author, coverId: null, pageCount: 'N/A', isbn: null, isCustom: true, link: '' };
         selectedBooks.push(bookData); displaySelectedBooksAdmin(); customTitleInput.value = ''; customAuthorInput.value = '';
     }
 
     // --- Selection (Admin View) ---
-    function selectBook(buttonElement, key, title, authors, coverId, pageCount, isbn) { /* ... Same, ensure bookData includes link ... */
+    function selectBook(buttonElement, key, title, authors, coverId, pageCount, isbn) {
         if (selectedBooks.some(b => b.key === key)) return;
-        const link = `https://openlibrary.org${key}`;
+        const link = key.startsWith('/works/') ? `https://openlibrary.org${key}` : ''; // Only generate link for works
         const bookData = { key, title, authors, coverId, pageCount, isbn, isCustom: false, link };
         selectedBooks.push(bookData); displaySelectedBooksAdmin();
         buttonElement.textContent = 'Selected'; buttonElement.disabled = true; buttonElement.closest('.book-item').classList.add('selected');
     }
 
-    function removeBook(keyToRemove) { /* ... Same, update admin display ... */
+    function removeBook(keyToRemove) {
         selectedBooks = selectedBooks.filter(book => book.key !== keyToRemove);
         displaySelectedBooksAdmin();
         const bookItemInSearch = searchResultsDiv.querySelector(`.book-item[data-key="${keyToRemove}"]`);
         if(bookItemInSearch){ const btn=bookItemInSearch.querySelector('button'); if(btn){ btn.textContent='Select'; btn.disabled=false; } bookItemInSearch.classList.remove('selected'); }
     }
 
-    function generateLinksHtmlAdmin(book) { // Specific function for admin view links if needed, or reuse voter one
+    function generateLinksHtmlAdmin(book) {
         if (book.isCustom || !book.link) return `<div class="links" style="font-size:0.9em;color:#999;">(Custom)</div>`;
         const goodreadsSearchLink = `https://www.goodreads.com/search?q=${encodeURIComponent(book.isbn || `${book.title} ${book.authors}`)}`;
         return `<div class="links"><a href="${book.link}" target="_blank">OL</a> | <a href="${goodreadsSearchLink}" target="_blank">GR</a></div>`;
     }
 
-     function displaySelectedBooksAdmin() { // Renamed to be specific
+     function displaySelectedBooksAdmin() {
         selectedBooksListDiv.innerHTML = '';
-        pollShareArea.style.display = 'none'; // Hide share link when list changes
+        pollShareArea.style.display = 'none';
         copyStatusDiv.textContent = '';
 
         if (selectedBooks.length === 0) {
@@ -240,12 +249,11 @@
         }
         startPollBtn.disabled = false;
         selectedBooks.forEach(book => {
-            const coverHtml = book.coverId ? `<img src="https://covers.openlibrary.org/b/id/${book.coverId}-S.jpg" alt="${book.title}" loading="lazy">` : selectedListPlaceholderSvg; // Use smaller image S
-            const pageCountDisplay = (book.pageCount && book.pageCount !== 'N/A') ? `${book.pageCount} pgs` : 'N/A pgs'; // Shorter pages
-            const linksHtml = generateLinksHtmlAdmin(book); // May need adjustment
+            const coverHtml = book.coverId ? `<img src="https://covers.openlibrary.org/b/id/${book.coverId}-S.jpg" alt="${book.title}" loading="lazy">` : selectedListPlaceholderSvg;
+            const pageCountDisplay = (book.pageCount && book.pageCount !== 'N/A') ? `${book.pageCount} pgs` : 'N/A pgs';
+            const linksHtml = generateLinksHtmlAdmin(book);
             const cardElement = document.createElement('div');
             cardElement.classList.add('selected-card');
-            // Simplified card structure for admin view
             cardElement.innerHTML = `
                 ${coverHtml}
                 <h3>${book.title}</h3>
@@ -258,71 +266,48 @@
         });
     }
 
-
     // --- Poll Creation (Firebase) ---
     async function startPoll() {
-        if (selectedBooks.length === 0) {
-            startPollStatus.textContent = "Please select at least one book.";
-            return;
-        }
-        startPollStatus.textContent = ""; // Clear previous errors
-        startPollBtn.disabled = true; // Prevent double clicks
-        startPollBtn.textContent = "Starting...";
+        if (selectedBooks.length === 0) { startPollStatus.textContent = "Please select at least one book."; return; }
+        startPollStatus.textContent = ""; startPollBtn.disabled = true; startPollBtn.textContent = "Starting...";
 
-        // Prepare poll data for Firebase
         const pollOptions = {};
-        selectedBooks.forEach((book, index) => {
-            // Use book key as the key in Firebase for easier updates, ensure it's valid for Firebase paths
-            const safeKey = book.key.replace(/[.$#[\]/]/g, '_'); // Replace invalid Firebase key characters
+        selectedBooks.forEach((book) => {
+            const safeKey = book.key.replace(/[.$#[\]/]/g, '_');
             pollOptions[safeKey] = {
-                title: book.title,
-                author: book.authors,
-                pageCount: book.pageCount,
-                link: book.isCustom ? '' : `https://openlibrary.org${book.key}`,
-                coverId: book.coverId, // Store coverId to rebuild image URL
-                isCustom: book.isCustom,
-                votes: 0 // Initialize votes
+                title: book.title, author: book.authors, pageCount: book.pageCount,
+                link: book.link, // Already generated during selection
+                coverId: book.coverId, isCustom: book.isCustom, votes: 0
             };
         });
-
         const pollData = {
-            title: "Book Club Vote - " + new Date().toLocaleDateString(), // Simple title
-            options: pollOptions,
-            createdAt: firebase.database.ServerValue.TIMESTAMP // Record creation time
+            title: "Book Club Vote - " + new Date().toLocaleDateString(),
+            options: pollOptions, createdAt: firebase.database.ServerValue.TIMESTAMP
         };
 
         try {
-            const newPollRef = database.ref('polls').push(); // Push creates a unique ID
+            const newPollRef = database.ref('polls').push();
             await newPollRef.set(pollData);
-            currentPollId = newPollRef.key; // Get the unique ID generated by push()
-
-            // Generate the shareable link
-            const baseUrl = window.location.href.split('?')[0]; // Get current page URL without params
+            currentPollId = newPollRef.key;
+            const baseUrl = window.location.href.split('?')[0].split('#')[0]; // More robust base URL
             const shareUrl = `${baseUrl}?pollId=${currentPollId}`;
-
-            pollShareLink.textContent = shareUrl;
-            pollShareLink.href = shareUrl; // Make it clickable
-            pollShareArea.style.display = 'block';
-            startPollBtn.textContent = "Poll Started!"; // Keep disabled
-             copyStatusDiv.textContent = ''; // Clear copy status
-
+            pollShareLink.textContent = shareUrl; pollShareLink.href = shareUrl;
+            pollShareArea.style.display = 'block'; startPollBtn.textContent = "Poll Started!";
+            copyStatusDiv.textContent = '';
         } catch (error) {
             console.error("Error starting poll:", error);
             startPollStatus.textContent = "Error starting poll. Check console/Firebase rules.";
-            startPollBtn.disabled = false; // Re-enable on error
-            startPollBtn.textContent = "Start Poll & Get Share Link";
+            startPollBtn.disabled = false; startPollBtn.textContent = "Start Poll & Get Share Link";
         }
     }
 
      function copyPollLink() {
         const link = pollShareLink.textContent;
         navigator.clipboard.writeText(link).then(() => {
-            copyStatusDiv.textContent = "Link copied!";
-            copyStatusDiv.style.color = 'green';
+            copyStatusDiv.textContent = "Link copied!"; copyStatusDiv.style.color = 'green';
             setTimeout(() => { copyStatusDiv.textContent = ''; }, 3000);
         }).catch(err => {
-            copyStatusDiv.textContent = "Copy failed.";
-             copyStatusDiv.style.color = 'red';
+            copyStatusDiv.textContent = "Copy failed."; copyStatusDiv.style.color = 'red';
             console.error('Failed to copy link: ', err);
         });
      }
@@ -330,125 +315,96 @@
     // --- Poll Loading & Display (Voter View) ---
     function loadPoll(pollId) {
         console.log("Loading poll:", pollId);
-        adminAreaDiv.style.display = 'none'; // Hide admin controls
-        pollViewDiv.style.display = 'block'; // Show poll view area
+        adminAreaDiv.style.display = 'none'; pollViewDiv.style.display = 'block';
 
         const pollRef = database.ref(`polls/${pollId}`);
 
-        // Listen for real-time updates using .on()
-        pollRef.on('value', (snapshot) => {
+        // Detach any previous listener before attaching a new one
+        if (pollDataListener) {
+            pollRef.off('value', pollDataListener);
+        }
+
+        // Define the listener function
+        pollDataListener = (snapshot) => {
             if (!snapshot.exists()) {
                 pollTitleH1.textContent = "Poll Not Found";
-                pollOptionsDiv.innerHTML = "<p class='error'>This poll ID doesn't exist or may have been deleted.</p>";
+                pollOptionsDiv.innerHTML = "<p class='error'>Poll ID invalid or deleted.</p>";
                 return;
             }
-
             currentPollData = snapshot.val();
-            currentPollId = pollId; // Store current Poll Id for voting function
+            currentPollId = pollId;
             pollTitleH1.textContent = currentPollData.title || "Book Club Poll";
-            pollOptionsDiv.innerHTML = ''; // Clear previous options
+            pollOptionsDiv.innerHTML = ''; // Clear before re-rendering
 
-            if (!currentPollData.options) {
-                 pollOptionsDiv.innerHTML = "<p class='placeholder-text'>No options found in this poll.</p>";
-                return
+            if (!currentPollData.options || Object.keys(currentPollData.options).length === 0) {
+                 pollOptionsDiv.innerHTML = "<p class='placeholder-text'>No options found.</p>"; return;
             }
 
-            // Convert options object back to array if needed, or iterate over keys
             Object.entries(currentPollData.options).forEach(([key, book]) => {
-                const cardElement = document.createElement('div');
-                cardElement.classList.add('poll-option-card');
-
-                const coverHtml = book.coverId ? `<img src="https://covers.openlibrary.org/b/id/${book.coverId}-S.jpg" alt="${book.title}" loading="lazy" style="width:50px; height:75px; object-fit:cover; margin-bottom:10px; border-radius:3px;">` : selectedListPlaceholderSvg; // Smaller image
-                 const pageCountDisplay = (book.pageCount && book.pageCount !== 'N/A') ? `${book.pageCount} pgs` : 'N/A pgs';
-                 const linksHtml = generateLinksHtmlVoter(book); // Specific voter view link function
-
-                cardElement.innerHTML = `
-                    <div> <!-- Wrapper for content -->
-                        ${coverHtml}
-                        <h4>${book.title}</h4>
-                        <p><em>by ${book.author}</em></p>
-                        <p>${pageCountDisplay}</p>
-                        ${linksHtml}
-                    </div>
-                    <div class="vote-area">
-                        <span class="vote-count" id="votes-${key}">${book.votes || 0} Votes</span>
-                        <button class="btn-vote" id="btn-${key}" onclick="castVote('${key}')">Vote</button>
-                    </div>
-                `;
+                const cardElement = document.createElement('div'); cardElement.classList.add('poll-option-card');
+                const coverHtml = book.coverId ? `<img src="https://covers.openlibrary.org/b/id/${book.coverId}-S.jpg" alt="${book.title}" loading="lazy" style="width:50px; height:75px; object-fit:cover; margin-bottom:10px; border-radius:3px;">` : `<div style="width:50px; height:75px; background:#eee; display:inline-block; border-radius:3px; margin-bottom:10px;"></div>`; // Inline placeholder
+                const pageCountDisplay = (book.pageCount && book.pageCount !== 'N/A') ? `${book.pageCount} pgs` : 'N/A pgs';
+                const linksHtml = generateLinksHtmlVoter(book);
+                cardElement.innerHTML = `<div>${coverHtml}<h4>${book.title}</h4><p><em>by ${book.author}</em></p><p>${pageCountDisplay}</p>${linksHtml}</div><div class="vote-area"><span class="vote-count" id="votes-${key}">${book.votes || 0} Votes</span><button class="btn-vote" id="btn-${key}" onclick="castVote('${key}')">Vote</button></div>`;
                 pollOptionsDiv.appendChild(cardElement);
             });
+            checkIfVoted(); // Check voting status after rendering
+        };
 
-            // Optionally: Check if user has already voted (using localStorage)
-            checkIfVoted();
-
-
-        }, (error) => {
+        // Attach the listener
+        pollRef.on('value', pollDataListener, (error) => {
             console.error("Error loading poll data:", error);
             pollTitleH1.textContent = "Error Loading Poll";
-            pollOptionsDiv.innerHTML = "<p class='error'>Could not fetch poll data. Check console.</p>";
+            pollOptionsDiv.innerHTML = "<p class='error'>Could not fetch poll data.</p>";
         });
     }
 
-    function generateLinksHtmlVoter(book) { // Generate links for the voter view
-        if (book.isCustom || !book.link) return `<div class="links"></div>`; // No links for custom
-        const goodreadsSearchLink = `https://www.goodreads.com/search?q=${encodeURIComponent(book.isbn || `${book.title} ${book.author}`)}`; // Use book.author here
+
+    function generateLinksHtmlVoter(book) {
+        if (book.isCustom || !book.link) return `<div class="links"></div>`;
+        const goodreadsSearchLink = `https://www.goodreads.com/search?q=${encodeURIComponent(book.isbn || `${book.title} ${book.author}`)}`;
         return `<div class="links"><a href="${book.link}" target="_blank" rel="noopener">Open Library</a> | <a href="${goodreadsSearchLink}" target="_blank" rel="noopener">Goodreads</a></div>`;
     }
 
     // --- Voting ---
     async function castVote(bookKey) {
-        if (!currentPollId) return; // Should not happen if poll loaded
+        if (!currentPollId) return;
+        const votedPollKey = `voted_${currentPollId}`; // Key for localStorage
 
-        // Simple check/prevention against repeat voting in same session
-        if (localStorage.getItem(`voted_${currentPollId}`) === bookKey) {
-            pollVoteStatusDiv.textContent = "You've already voted for this option.";
+        if (localStorage.getItem(votedPollKey)) {
+            pollVoteStatusDiv.textContent = "You have already voted in this poll.";
             pollVoteStatusDiv.style.color = "orange";
-            disableAllVoteButtons(); // Still disable if they somehow click again
+            disableAllVoteButtons();
+            setTimeout(() => { pollVoteStatusDiv.textContent = ''; }, 4000);
             return;
-        }
-         if (localStorage.getItem(`voted_${currentPollId}`)) {
-             pollVoteStatusDiv.textContent = "You have already voted in this poll.";
-             pollVoteStatusDiv.style.color = "orange";
-             disableAllVoteButtons();
-             return;
         }
 
         const voteButton = document.getElementById(`btn-${bookKey}`);
-        if (voteButton) voteButton.disabled = true; // Disable immediately
+        disableAllVoteButtons(); // Disable all buttons optimistically
         pollVoteStatusDiv.textContent = "Registering vote...";
         pollVoteStatusDiv.style.color = "var(--primary-color)";
-
 
         const voteRef = database.ref(`polls/${currentPollId}/options/${bookKey}/votes`);
 
         try {
-            // Use a transaction to safely increment the vote count
-            const result = await voteRef.transaction(currentVotes => {
-                // If votes haven't been set, initialize to 1, otherwise increment
-                return (currentVotes || 0) + 1;
-            });
-
+            const result = await voteRef.transaction(currentVotes => (currentVotes || 0) + 1);
             if (result.committed) {
                  pollVoteStatusDiv.textContent = "Vote registered!";
                  pollVoteStatusDiv.style.color = "green";
-                 // Mark as voted in localStorage for simple repeat prevention
-                 localStorage.setItem(`voted_${currentPollId}`, bookKey);
-                 // Disable all buttons after successful vote
-                 disableAllVoteButtons();
-
+                 localStorage.setItem(votedPollKey, bookKey); // Mark as voted with the option chosen
+                 // Buttons are already disabled
             } else {
-                 pollVoteStatusDiv.textContent = "Vote could not be committed (maybe simultaneous update). Try again?";
+                 pollVoteStatusDiv.textContent = "Vote failed (conflict)."; // Maybe someone else voted at exact same time
                  pollVoteStatusDiv.style.color = "orange";
-                 if (voteButton) voteButton.disabled = false; // Re-enable if transaction failed
+                 checkIfVoted(); // Re-enable buttons if not marked as voted
             }
-
         } catch (error) {
             console.error("Error casting vote:", error);
             pollVoteStatusDiv.textContent = "Error registering vote.";
             pollVoteStatusDiv.style.color = "red";
-             if (voteButton) voteButton.disabled = false; // Re-enable on error
+            checkIfVoted(); // Re-enable buttons if not marked as voted
         }
-         setTimeout(() => { pollVoteStatusDiv.textContent = ''; }, 4000); // Clear status
+        setTimeout(() => { pollVoteStatusDiv.textContent = ''; }, 4000);
     }
 
      function disableAllVoteButtons() {
@@ -459,11 +415,15 @@
      function checkIfVoted() {
         const votedOptionKey = localStorage.getItem(`voted_${currentPollId}`);
          if (votedOptionKey) {
-             pollVoteStatusDiv.textContent = "You have already voted in this poll.";
-             pollVoteStatusDiv.style.color = "var(--subtle-text-color)";
+             // If user has voted, ensure all buttons are disabled
              disableAllVoteButtons();
+             pollVoteStatusDiv.textContent = "You have voted in this poll."; // Optionally show status
+             pollVoteStatusDiv.style.color = "var(--subtle-text-color)";
          } else {
-             pollVoteStatusDiv.textContent = ""; // Clear any previous status
+             // If user hasn't voted, ensure buttons are enabled (unless disabled for other reasons)
+             const buttons = pollOptionsDiv.querySelectorAll('.btn-vote');
+             buttons.forEach(button => button.disabled = false);
+              pollVoteStatusDiv.textContent = ""; // Clear any previous status
          }
      }
 
@@ -471,10 +431,8 @@
     window.onload = () => {
         const pollId = getPollIdFromUrl();
         if (pollId) {
-            // Load specific poll if ID is in URL
             loadPoll(pollId);
         } else {
-            // Otherwise, show the admin/creation interface
             adminAreaDiv.style.display = 'block';
             pollViewDiv.style.display = 'none';
             displaySelectedBooksAdmin(); // Initial display for admin
