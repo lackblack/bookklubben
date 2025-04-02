@@ -71,8 +71,9 @@
         }
         input[type="text"]:focus, input[type="url"]:focus, textarea:focus { background-color: #fff; }
         textarea { resize: vertical; min-height: 60px; }
-        #allBooksTextarea {
-            width: 100%; min-height: 100px; margin-top: 10px; font-size: 0.95em;
+        #copyInfoTextarea {
+            position: absolute; left: -9999px; top: auto;
+            width: 1px; height: 1px; overflow: hidden; opacity: 0;
         }
 
         label {
@@ -124,19 +125,17 @@
             border-color: var(--border-color); border-style: solid; border-width: 1px;
             cursor: not-allowed; color: var(--subtle-text-color); background-color: #e5e1d8; transform: none;
         }
-        #addManualEntryBtn, .btn-vote, #startPollBtn, #revealVotesBtn, #copyAllBooksBtn {
-            background-color: #d4e2d4;
-        }
-        #addManualEntryBtn:hover, .btn-vote:hover, #startPollBtn:hover, #revealVotesBtn:hover, #copyAllBooksBtn:hover {
-            background-color: #e0f0e0;
-        }
-        #addManualEntryBtn:active, .btn-vote:active, #startPollBtn:active, #revealVotesBtn:active, #copyAllBooksBtn:active {
-            background-color: #c8d8c8;
-        }
+        #addManualEntryBtn, .btn-vote, #startPollBtn, #revealVotesBtn { background-color: #d4e2d4; }
+        #addManualEntryBtn:hover, .btn-vote:hover, #startPollBtn:hover, #revealVotesBtn:hover { background-color: #e0f0e0; }
+        #addManualEntryBtn:active, .btn-vote:active, #startPollBtn:active, #revealVotesBtn:active { background-color: #c8d8c8; }
 
         .btn-remove { background-color: #eacccc; }
         .btn-remove:hover { background-color: #f5dddd; }
         .btn-remove:active { background-color: #e0c0c0; }
+
+        .btn-copy-single { background-color: var(--secondary-color); }
+        .btn-copy-single:hover { background-color: var(--secondary-hover-color); }
+        .btn-copy-single:active { background-color: #b88030; }
 
         #closeSearchBtn {
             position: absolute; top: -10px; right: -1px; z-index: 10;
@@ -281,7 +280,7 @@
         #pollShareArea button { font-size: 0.95em; padding: 6px 15px; height: 30px; padding-top: 5px; }
 
         .admin-action-buttons { text-align: center; margin-top: 25px; }
-        #copyAllStatus, #copyStatus, #startPollStatus {
+        #copyInfoStatus, #copyStatus, #startPollStatus {
             min-height: 1.3em; margin-top: 5px; font-size: 0.9em; text-align: center;
         }
 
@@ -293,6 +292,7 @@
         .placeholder-svg path, .placeholder-svg circle { stroke: var(--subtle-text-color); fill: var(--subtle-text-color); }
         .manual-placeholder-svg text { font-family: var(--font-retro); fill: var(--text-color); }
     </style>
+    <!-- Firebase SDK v10 Modular -->
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js';
         import { getDatabase, ref, push, set, onValue, update } from 'https://www.gstatic.com/firebasejs/10.11.0/firebase-database.js';
@@ -340,9 +340,8 @@
         const closeSearchBtn = document.getElementById('closeSearchBtn');
         const revealVotesArea = document.getElementById('revealVotesArea');
         const revealVotesBtn = document.getElementById('revealVotesBtn');
-        const copyAllBooksBtn = document.getElementById('copyAllBooksBtn');
-        const allBooksTextarea = document.getElementById('allBooksTextarea');
-        const copyAllStatus = document.getElementById('copyAllStatus');
+        const copyInfoTextarea = document.getElementById('copyInfoTextarea');
+        const copyInfoStatus = document.getElementById('copyInfoStatus');
 
         // State
         let selectedBooks = [];
@@ -393,7 +392,7 @@
         }
         function escapeHtmlBasic(str) {
             if (typeof str !== 'string') str = String(str);
-            return str.replace(/&/g, "&").replace(/</g, "<").replace(/>/g, ">").replace(/"/g, """).replace(/'/g, "'");
+            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
         }
 
         // Search & Close Results
@@ -546,12 +545,10 @@
             selectedBooksListDiv.innerHTML = '';
             pollShareArea.style.display = 'none';
             copyStatusDiv.textContent = '';
-            copyAllStatus.textContent = '';
-            allBooksTextarea.value = '';
+            copyInfoStatus.textContent = '';
 
             const hasBooks = selectedBooks.length > 0;
             startPollBtn.disabled = !hasBooks;
-            copyAllBooksBtn.disabled = !hasBooks;
 
             if (!hasBooks) {
                 selectedBooksListDiv.innerHTML = '<p class="placeholder-text"></p>';
@@ -592,60 +589,20 @@
                 }
 
                 const actionsDiv = cardElement.querySelector('.card-actions');
+                const copyButton = document.createElement('button');
+                copyButton.className = 'btn-copy-single';
+                copyButton.textContent = 'Copy book info';
+                copyButton.addEventListener('click', () => copySingleBookInfo(book.key));
                 const removeButton = document.createElement('button');
                 removeButton.className = 'btn-remove';
                 removeButton.textContent = 'Remove';
                 removeButton.addEventListener('click', () => removeBook(book.key));
+                actionsDiv.appendChild(copyButton);
                 actionsDiv.appendChild(removeButton);
 
                 selectedBooksListDiv.appendChild(cardElement);
             });
         }
-
-        // New Function to Generate and Display All Books Text
-        function copyAllBooksInfo() {
-            if (selectedBooks.length === 0) {
-                copyAllStatus.textContent = "NO BOOKS TO COPY";
-                copyAllStatus.style.color = "var(--danger-color)";
-                allBooksTextarea.value = '';
-                return;
-            }
-
-            const booksText = selectedBooks.map(book => {
-                const title = book.title || "Unknown Title";
-                const author = book.authors || "Unknown Author";
-                let bestLink = "";
-                if (book.isManual && book.link) {
-                    bestLink = book.link;
-                } else if (book.isbn) {
-                    bestLink = `https://www.goodreads.com/search?q=${encodeURIComponent(book.isbn)}`;
-                } else if (!book.isManual && book.link) {
-                    bestLink = book.link;
-                }
-                return bestLink ? `${title} - ${author}\nLink: ${bestLink}` : `${title} - ${author}`;
-            }).join('\n\n');
-
-            allBooksTextarea.value = booksText;
-            allBooksTextarea.focus();
-            allBooksTextarea.select();
-
-            try {
-                navigator.clipboard.writeText(booksText).then(() => {
-                    copyAllStatus.textContent = "ALL BOOKS COPIED TO CLIPBOARD!";
-                    copyAllStatus.style.color = "var(--success-color)";
-                    setTimeout(() => { copyAllStatus.textContent = ''; }, 3000);
-                }).catch(err => {
-                    console.error('Clipboard Error:', err);
-                    copyAllStatus.textContent = "COPY FAILED - SELECT TEXT MANUALLY";
-                    copyAllStatus.style.color = "var(--danger-color)";
-                });
-            } catch (err) {
-                console.error('Clipboard API not supported:', err);
-                copyAllStatus.textContent = "COPY UNSUPPORTED - SELECT TEXT MANUALLY";
-                copyAllStatus.style.color = "var(--danger-color)";
-            }
-        }
-        copyAllBooksBtn.addEventListener('click', copyAllBooksInfo);
 
         // Poll Creation (Firebase)
         async function startPoll() {
@@ -704,6 +661,45 @@
             }
         }
         pollShareArea.querySelector('button').addEventListener('click', copyPollLink);
+
+        function copySingleBookInfo(bookKey) {
+            const book = selectedBooks.find(b => b.key === bookKey);
+            if (!book) {
+                copyInfoStatus.textContent = "BOOK NOT FOUND?";
+                copyInfoStatus.style.color = "var(--danger-color)";
+                return;
+            }
+
+            const title = book.title || "Unknown Title";
+            const author = book.authors || "Unknown Author";
+            let bestLink = "";
+            if (book.isManual && book.link) {
+                bestLink = book.link;
+            } else if (book.isbn) {
+                bestLink = `https://www.goodreads.com/search?q=${encodeURIComponent(book.isbn)}`;
+            } else if (!book.isManual && book.link) {
+                bestLink = book.link;
+            }
+
+            let infoString = `${title} - ${author}\n`;
+            if (bestLink) infoString += `Link: ${bestLink}`;
+
+            try {
+                navigator.clipboard.writeText(infoString.trim()).then(() => {
+                    copyInfoStatus.textContent = `"${title}" INFO COPIED!`;
+                    copyInfoStatus.style.color = "var(--success-color)";
+                    setTimeout(() => { copyInfoStatus.textContent = ''; }, 3000);
+                }).catch(err => {
+                    console.error('Clipboard Error:', err);
+                    copyInfoStatus.textContent = "COPY FAILED";
+                    copyInfoStatus.style.color = 'var(--danger-color)';
+                });
+            } catch (err) {
+                console.error('Clipboard API not supported:', err);
+                copyInfoStatus.textContent = "COPY UNSUPPORTED";
+                copyInfoStatus.style.color = 'var(--danger-color)';
+            }
+        }
 
         // Poll Loading & Display
         function loadPoll(pollId) {
@@ -980,12 +976,11 @@
                     <div id="selectedBooksList">
                         <p class="placeholder-text"></p>
                     </div>
+                    <textarea id="copyInfoTextarea" aria-hidden="true"></textarea>
+                    <div id="copyInfoStatus" class="status-message"></div>
                     <div class="admin-action-buttons">
                         <button id="startPollBtn">MAKE_POLL</button>
-                        <button id="copyAllBooksBtn">COPY ALL BOOKS</button>
                     </div>
-                    <textarea id="allBooksTextarea" placeholder="Click 'Copy All Books' to generate text here..." readonly></textarea>
-                    <div id="copyAllStatus" class="status-message"></div>
                     <div id="startPollStatus" class="status-message error"></div>
                     <div id="pollShareArea" style="display: none;">
                         >> Poll Ready! Share Link:
