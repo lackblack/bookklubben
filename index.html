@@ -418,7 +418,7 @@
         const searchStatusDiv = document.getElementById('searchStatus');
         const manualTitleInput = document.getElementById('manualTitleInput');
         const manualAuthorInput = document.getElementById('manualAuthorInput');
-        const manualLinkInput = document.getElementById('manualLinkInput'); // Base link for manual entry
+        const manualLinkInput = document.getElementById('manualLinkInput');
         const manualAddStatusDiv = document.getElementById('manualAddStatus');
         const selectedBooksListDiv = document.getElementById('selectedBooksList');
         const startPollBtn = document.getElementById('startPollBtn');
@@ -447,7 +447,7 @@
         let currentPollData = null;
         let pollDataListener = null;
         let votesRevealed = false;
-        let currentlyEditingKey = null; // Track which book is being edited
+        let currentlyEditingKey = null;
 
         // --- Placeholders ---
         const searchResultPlaceholderSvg = `<svg width="30" height="45" viewBox="0 0 30 45" fill="none" xmlns="http://www.w3.org/2000/svg" class="placeholder-svg"><rect width="30" height="45"/><path d="M10 37H20" stroke="#6c6a64" stroke-width="1.2" /><path d="M10 33H20" stroke="#6c6a64" stroke-width="1.2" /><path d="M15 29C17.5 29 19.5 27 19.5 24.5C19.5 22 17.5 20 15 20C12.5 20 10.5 22 10.5 24.5C10.5 25.5 10.9 26.5 11.5 27.2" stroke="#6c6a64" stroke-width="1.2" /><path d="M15 29V31" stroke="#6c6a64" stroke-width="1.2" /><circle cx="15" cy="33" r="0.8" fill="#6c6a64"/></svg>`;
@@ -498,6 +498,32 @@
                        .replace(/"/g, """)
                        .replace(/'/g, "'");
          }
+
+        // --- Helper Function: Validate Optional URL (Moved to Global Scope) ---
+        const validateOptionalUrl = (url, inputElement, fieldName, errorDiv) => {
+            // errorDiv needs to be passed in now, or assume it's globally accessible
+            // Let's pass it for better encapsulation
+            if (!errorDiv) {
+                 console.error("Error div not provided to validateOptionalUrl");
+                 return false; // Cannot display error
+            }
+            if (url) { // Only validate if not empty
+                try {
+                    new URL(url); // Check structure
+                    if (!url.match(/^https?:\/\//)) { // Check protocol
+                        errorDiv.textContent = `INVALID ${fieldName} URL (use http/https)`;
+                        if (inputElement) inputElement.focus(); // Use if check
+                        return false;
+                    }
+                } catch (_) {
+                    errorDiv.textContent = `INVALID ${fieldName} URL FORMAT`;
+                    if (inputElement) inputElement.focus(); // Use if check
+                    return false;
+                }
+            }
+            return true; // Valid (or empty)
+        };
+
         // --- End Utility Functions ---
 
         // --- Search Functionality ---
@@ -584,7 +610,8 @@
                 manualTitleInput.focus();
                 return;
             }
-             // Basic URL validation
+             // Basic URL validation - Use a dummy error div for this initial check if needed
+             // Or simplify validation here if helper function access is complex
             let isValidUrl = true;
             if (link) {
                 try {
@@ -595,7 +622,7 @@
                 }
             }
             if (link && !isValidUrl) {
-                manualAddStatusDiv.textContent = 'INVALID URL (use http/https)';
+                manualAddStatusDiv.textContent = 'INVALID MANUAL LINK URL (use http/https)';
                 manualLinkInput.focus();
                 return;
             }
@@ -710,7 +737,8 @@
         function saveEdit(key) {
             const card = selectedBooksListDiv.querySelector(`.selected-card[data-key="${key}"]`);
             if (!card) return; // Card not found
-            const errorDiv = card.querySelector('.edit-error');
+            const errorDiv = card.querySelector('.edit-error'); // Find the error div WITHIN the card
+            if (!errorDiv) { console.error("Could not find error div in card for key:", key); return; }
             errorDiv.textContent = ''; // Clear previous errors
 
             // Find the book index
@@ -730,39 +758,14 @@
             const newOlOverride = olOverrideInput.value.trim();
             const newGrOverride = grOverrideInput.value.trim();
 
-            // --- Validation ---
+            // --- Validation (Using the globally defined helper) ---
             if (!newTitle) { errorDiv.textContent = "TITLE REQUIRED"; titleInput.focus(); return; }
 
-                      // Function to validate optional URL
-            const validateOptionalUrl = (url, inputElement, fieldName) => {
-                if (url) { // Only validate if not empty
-                    try {
-                        new URL(url);
-                        if (!url.match(/^https?:\/\//)) {
-                            errorDiv.textContent = `INVALID ${fieldName} URL (use http/https)`;
-                            // Replace optional chaining with explicit check
-                            if (inputElement) {
-                                inputElement.focus();
-                            }
-                            return false;
-                        }
-                    } catch (_) {
-                        errorDiv.textContent = `INVALID ${fieldName} URL FORMAT`;
-                         // Replace optional chaining with explicit check
-                        if (inputElement) {
-                            inputElement.focus();
-                        }
-                        return false;
-                    }
-                }
-                return true; // Valid (or empty)
-            };
-
-            if (manualLinkInput && !validateOptionalUrl(newManualLink, manualLinkInput, "MANUAL")) return;
-            if (!validateOptionalUrl(newOlOverride, olOverrideInput, "OL")) return;
-            if (!validateOptionalUrl(newGrOverride, grOverrideInput, "GR")) return;
+            // Pass the errorDiv specific to this card to the validation function
+            if (manualLinkInput && !validateOptionalUrl(newManualLink, manualLinkInput, "MANUAL", errorDiv)) return;
+            if (!validateOptionalUrl(newOlOverride, olOverrideInput, "OL", errorDiv)) return;
+            if (!validateOptionalUrl(newGrOverride, grOverrideInput, "GR", errorDiv)) return;
             // --- End Validation ---
-
 
             // Update the book object in the selectedBooks array
             selectedBooks[bookIndex].title = newTitle;
@@ -774,7 +777,6 @@
             // Update overrides (store null if empty, otherwise store the trimmed value)
             selectedBooks[bookIndex].openLibraryLinkOverride = newOlOverride || null;
             selectedBooks[bookIndex].goodreadsLinkOverride = newGrOverride || null;
-
 
             currentlyEditingKey = null; // Exit editing mode
             displaySelectedBooksAdmin(); // Re-render the list with updated data
@@ -860,7 +862,7 @@
             startPollBtn.disabled = !hasBooks || currentlyEditingKey;
 
             if (!hasBooks) {
-                selectedBooksListDiv.innerHTML = '<p class="placeholder-text"></p>';
+                selectedBooksListDiv.innerHTML = '<p class="placeholder-text">[[ Add books using search or manual entry above ]]</p>';
                 return;
             }
 
@@ -880,10 +882,9 @@
                 const linksHtmlDisplay = generateLinksHtmlAdmin(book); // Use function that respects overrides
 
                 // --- Determine placeholders for edit link fields ---
-                // Use base OL link as placeholder for OL override if it exists and not manual
                 const olPlaceholder = escapeHtmlBasic(book.link && !book.isManual ? book.link : 'e.g., https://openlibrary.org/...');
-                // Use default generated GR link as placeholder for GR override
                 const grPlaceholder = escapeHtmlBasic(generateDefaultGrLink(book) || 'e.g., https://goodreads.com/...');
+
 
                 // Build card inner HTML with display and edit sections
                 cardElement.innerHTML = `
@@ -1024,7 +1025,10 @@
                           // Only add GR link line if it's effective (override or default generated)
                          if (effectiveGrLink) linkLines.push(`GR Link: ${effectiveGrLink}`);
 
-                         return `${title} - ${author}${pageInfo}\n${linkLines.join('\n')}`.trim();
+                         // Only add newline if there are links to show
+                         const linksBlock = linkLines.length > 0 ? `\n${linkLines.join('\n')}` : '';
+
+                         return `${title} - ${author}${pageInfo}${linksBlock}`.trim();
                      }).join('\n\n');
                  } catch (error) {
                      console.error("Error generating book info text:", error);
@@ -1355,7 +1359,7 @@
                                 <input type="text" id="manualAuthorInput" placeholder="(Optional)" aria-label="Manual Book Author">
                             </div>
                             <div class="manual-field-group">
-                                <label for="manualLinkInput">Manual Link:</label> <!-- Label changed for clarity -->
+                                <label for="manualLinkInput">Manual Link:</label> <!-- Label clarified -->
                                 <input type="url" id="manualLinkInput" placeholder="(Optional http://...)" aria-label="Manual Book Link">
                             </div>
                             <button type="submit" id="addManualEntryBtn">Add Manual</button>
@@ -1369,7 +1373,7 @@
                 <h2>Selected books</h2>
                 <div class="section-content">
                     <div id="selectedBooksList">
-                        <p class="placeholder-text"></p>
+                        <p class="placeholder-text">[[ Add books using search or manual entry above ]]</p>
                     </div>
                     <div class="admin-action-buttons">
                         <button id="startPollBtn" disabled>MAKE_POLL</button>
