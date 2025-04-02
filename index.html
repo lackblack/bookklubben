@@ -17,12 +17,8 @@
             --secondary-hover-color: #d49f4e;
             --success-color: #5a8a5a;
             --success-hover-color: #6cac6c;
-            --success-bg-color: #d4e2d4; /* Added for winner background */
             --danger-color: #a94a4a;
             --danger-hover-color: #c85a5a;
-            --edit-color: #3a5d9f;
-            --edit-hover-color: #4a72c4;
-            --edit-bg-color: #d4dce2;
             --text-color: #333330;
             --subtle-text-color: #6b6a64;
             --border-color: #a09c91;
@@ -65,7 +61,7 @@
         section { margin-bottom: 30px; padding-bottom: 5px; }
         .section-content { margin-top: -1.5em; }
 
-        input[type="text"], input[type="url"], textarea, .edit-input {
+        input[type="text"], input[type="url"], textarea {
             padding: 8px 10px; border: 1px solid;
             border-color: var(--border-shadow) var(--border-highlight) var(--border-highlight) var(--border-shadow);
             border-style: inset; border-width: 2px; font-size: 1em;
@@ -73,7 +69,7 @@
             background-color: var(--input-bg); margin-bottom: 8px; width: 100%;
             font-family: var(--font-retro); color: var(--text-color); outline: none;
         }
-        input[type="text"]:focus, input[type="url"]:focus, textarea:focus, .edit-input:focus { background-color: #fff; }
+        input[type="text"]:focus, input[type="url"]:focus, textarea:focus { background-color: #fff; }
         textarea { resize: vertical; min-height: 60px; }
         #pollBooksTextarea {
             width: 100%; min-height: 100px; margin-top: 10px; font-size: 0.95em;
@@ -128,23 +124,19 @@
             border-color: var(--border-color); border-style: solid; border-width: 1px;
             cursor: not-allowed; color: var(--subtle-text-color); background-color: #e5e1d8; transform: none;
         }
-        #addManualEntryBtn, .btn-vote, #startPollBtn, #revealVotesBtn, .btn-save {
-            background-color: var(--success-bg-color); /* Updated common green bg */
+        #addManualEntryBtn, .btn-vote, #startPollBtn, #revealVotesBtn {
+            background-color: #d4e2d4;
         }
-        #addManualEntryBtn:hover, .btn-vote:hover, #startPollBtn:hover, #revealVotesBtn:hover, .btn-save:hover {
+        #addManualEntryBtn:hover, .btn-vote:hover, #startPollBtn:hover, #revealVotesBtn:hover {
             background-color: #e0f0e0;
         }
-        #addManualEntryBtn:active, .btn-vote:active, #startPollBtn:active, #revealVotesBtn:active, .btn-save:active {
+        #addManualEntryBtn:active, .btn-vote:active, #startPollBtn:active, #revealVotesBtn:active {
             background-color: #c8d8c8;
         }
 
         .btn-remove { background-color: #eacccc; }
         .btn-remove:hover { background-color: #f5dddd; }
         .btn-remove:active { background-color: #e0c0c0; }
-
-        .btn-edit { background-color: var(--edit-bg-color); }
-        .btn-edit:hover { background-color: #e0e5ea; }
-        .btn-edit:active { background-color: #c8d0d8; }
 
         #closeSearchBtn {
             position: absolute; top: -10px; right: -1px; z-index: 10;
@@ -184,7 +176,6 @@
             display: flex; flex-direction: column;
             overflow: hidden; padding: 15px;
             transition: transform 0.1s ease-out, border-color 0.1s ease-out;
-            position: relative; /* Needed for edit overlay potentially, or just structure */
         }
         .selected-card:hover { transform: translate(-1px, -1px); border-color: #fff #aaa #aaa #fff; }
         .selected-card img, .selected-card .placeholder-svg {
@@ -197,15 +188,14 @@
         .selected-card .manual-placeholder-svg {
             border: 1px solid var(--border-color); border-style: solid; background-color: #e0dccf;
         }
-        .selected-card .card-content { flex-grow: 1; display: flex; flex-direction: column; }
-        .selected-card h3 { font-size: 1.1em; margin: 4px 0 3px 0; font-weight: normal; line-height: 1.3; color: var(--text-color); text-transform: none; text-align: center; word-wrap: break-word; }
-        .selected-card p { font-size: 1em; color: var(--subtle-text-color); margin: 2px 0; text-align: center; word-wrap: break-word; }
+        .selected-card h3 { font-size: 1.1em; margin: 4px 0 3px 0; font-weight: normal; line-height: 1.3; color: var(--text-color); text-transform: none; text-align: center; }
+        .selected-card p { font-size: 1em; color: var(--subtle-text-color); margin: 2px 0; text-align: center; }
         .selected-card p em { font-style: normal; }
         .selected-card .links {
             margin-top: 8px; font-size: 0.9em; line-height: 1.4; margin-bottom: 10px;
             flex-grow: 1; min-height: calc(0.9em * 1.4); word-wrap: break-word; text-align: center;
         }
-        .selected-card .links a { color: var(--primary-color); text-decoration: underline; margin: 0 5px; word-break: break-all; }
+        .selected-card .links a { color: var(--primary-color); text-decoration: underline; margin: 0 5px; }
         .selected-card .links a:hover { color: var(--primary-hover-color); }
         .selected-card .card-actions {
             margin-top: auto; display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; padding-top: 10px; flex-shrink: 0;
@@ -213,19 +203,6 @@
         .selected-card .card-actions button {
             font-size: 0.9em; padding: 5px 12px; width: auto; height: 30px; padding-top: 4px; margin: 0;
         }
-
-        /* Edit Mode Styles */
-        .selected-card.is-editing .card-content { display: none; } /* Hide normal content */
-        .selected-card .edit-form { display: none; flex-direction: column; gap: 5px; margin-bottom: 10px; }
-        .selected-card.is-editing .edit-form { display: flex; } /* Show edit form */
-        .selected-card.is-editing .card-actions { justify-content: space-around; } /* Adjust button spacing in edit mode */
-        .selected-card .edit-form label {
-             font-size: 0.85em; text-align: left; margin-bottom: 0; color: var(--text-color);
-        }
-        .selected-card .edit-form .edit-input {
-             margin-bottom: 2px; font-size: 0.95em; padding: 4px 6px; height: 30px;
-        }
-        .selected-card .edit-form .edit-input[type="url"] { font-size: 0.85em; } /* Smaller font for URL */
 
         .selected-card.manual-entry { border-style: outset; }
         .selected-card.manual-entry .freeform-text { display: none; }
@@ -252,14 +229,14 @@
         .poll-card-content .manual-placeholder-svg {
             border: 1px solid var(--border-color); border-style: solid; background-color: #e0dccf;
         }
-        .poll-option-card h4 { margin: 4px 0 4px 0; font-size: 1.15em; font-weight: normal; text-align: center; color: var(--text-color); text-transform: none; word-wrap: break-word; }
-        .poll-option-card p { margin: 2px 0; font-size: 1em; color: var(--subtle-text-color); text-align: center; word-wrap: break-word; }
+        .poll-option-card h4 { margin: 4px 0 4px 0; font-size: 1.15em; font-weight: normal; text-align: center; color: var(--text-color); text-transform: none; }
+        .poll-option-card p { margin: 2px 0; font-size: 1em; color: var(--subtle-text-color); text-align: center; }
         .poll-option-card p em { font-style: normal; }
         .poll-option-card .links {
             margin: 10px 0; font-size: 0.9em; text-align: center;
             word-wrap: break-word; min-height: calc(0.9em * 1.4);
         }
-        .poll-option-card .links a { color: var(--primary-color); text-decoration: underline; margin: 0 5px; word-break: break-all;}
+        .poll-option-card .links a { color: var(--primary-color); text-decoration: underline; margin: 0 5px; }
         .poll-option-card .links a:hover { color: var(--primary-hover-color); }
 
         .vote-area { margin-top: 12px; text-align: center; border-top: 1px dashed var(--border-color); padding-top: 12px; }
@@ -278,7 +255,6 @@
 
         .poll-option-card.winner {
             border-color: var(--success-hover-color) var(--success-color) var(--success-color) var(--success-hover-color);
-            background-color: var(--success-bg-color); /* Green background for winner */
         }
         .poll-option-card.winner .vote-count {
             color: var(--success-color); font-weight: bold;
@@ -308,9 +284,6 @@
         #copyStatus, #startPollStatus {
             min-height: 1.3em; margin-top: 5px; font-size: 0.9em; text-align: center;
         }
-        #editStatus { /* Status message for edit actions */
-            font-size: 0.85em; margin-top: -8px; margin-bottom: 5px; text-align: center; min-height: 1.2em;
-        }
 
         #adminArea { display: block; }
         #pollView { display: none; }
@@ -325,7 +298,6 @@
         import { getDatabase, ref, push, set, onValue, update } from 'https://www.gstatic.com/firebasejs/10.11.0/firebase-database.js';
 
         const firebaseConfig = {
-            // --- Firebase config remains the same ---
             apiKey: "AIzaSyAPi4OmZieXOwy3fDhXPPt9ac_KCE0_hkw",
             authDomain: "book-klubben-236e1.firebaseapp.com",
             databaseURL: "https://book-klubben-236e1-default-rtdb.europe-west1.firebasedatabase.app",
@@ -346,7 +318,7 @@
             throw e;
         }
 
-        // DOM Elements (no changes needed here for the new features)
+        // DOM Elements
         const searchInput = document.getElementById('searchInput');
         const searchResultsDiv = document.getElementById('searchResults');
         const searchStatusDiv = document.getElementById('searchStatus');
@@ -370,7 +342,7 @@
         const revealVotesBtn = document.getElementById('revealVotesBtn');
         const pollBooksTextarea = document.getElementById('pollBooksTextarea');
 
-        // State (no changes needed here)
+        // State
         let selectedBooks = [];
         let searchTimeoutId = null;
         let currentPollId = null;
@@ -378,7 +350,7 @@
         let pollDataListener = null;
         let votesRevealed = false;
 
-        // Placeholders (no changes needed here)
+        // Placeholders
         const searchResultPlaceholderSvg = `<svg width="30" height="45" viewBox="0 0 30 45" fill="none" xmlns="http://www.w3.org/2000/svg" class="placeholder-svg"><rect width="30" height="45"/><path d="M10 37H20" stroke="#6c6a64" stroke-width="1.2" /><path d="M10 33H20" stroke="#6c6a64" stroke-width="1.2" /><path d="M15 29C17.5 29 19.5 27 19.5 24.5C19.5 22 17.5 20 15 20C12.5 20 10.5 22 10.5 24.5C10.5 25.5 10.9 26.5 11.5 27.2" stroke="#6c6a64" stroke-width="1.2" /><path d="M15 29V31" stroke="#6c6a64" stroke-width="1.2" /><circle cx="15" cy="33" r="0.8" fill="#6c6a64"/></svg>`;
         const selectedListPlaceholderSvg = `<svg width="65" height="97" viewBox="0 0 65 97" fill="none" xmlns="http://www.w3.org/2000/svg" class="placeholder-svg"><rect width="65" height="97"/><path d="M22 80H43" stroke="#6c6a64" stroke-width="1.5" /><path d="M22 72H43" stroke="#6c6a64" stroke-width="1.5"/><path d="M32.5 65C36.9 65 40.5 61.4 40.5 57C40.5 52.6 36.9 49 32.5 49C28.1 49 24.5 52.6 24.5 57C24.5 58.9 25.2 60.6 26.3 61.8" stroke="#6c6a64" stroke-width="1.8" /><path d="M32.5 65V68" stroke="#6c6a64" stroke-width="1.8" /><circle cx="32.5" cy="72" r="1.5" fill="#6c6a64"/></svg>`;
 
@@ -400,29 +372,33 @@
                     </svg>`;
         }
 
-        // Utility Functions (no changes needed here)
+        // Utility Functions
         function debounce(func, delay) {
             return function (...args) {
                 clearTimeout(searchTimeoutId);
                 searchTimeoutId = setTimeout(() => func.apply(this, args), delay);
             };
         }
+
         function getPollIdFromUrl() {
             const params = new URLSearchParams(window.location.search);
             return params.get('pollId');
         }
+
         function sanitizeKey(key) {
             return key.replace(/[.$#[\]/]/g, '_');
         }
+
         function createUniqueKey(prefix = 'key_') {
             return prefix + Date.now() + '_' + Math.random().toString(36).substring(2, 9);
         }
+
         function escapeHtmlBasic(str) {
             if (typeof str !== 'string') str = String(str || '');
-            return str.replace(/&/g, "&").replace(/</g, "<").replace(/>/g, ">").replace(/"/g, """).replace(/'/g, "'");
+            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
         }
 
-        // Search Functionality (no changes needed here)
+        // Search Functionality
         async function performSearch() {
             const query = searchInput.value.trim();
             searchResultsDiv.innerHTML = '';
@@ -444,6 +420,7 @@
                 searchResultsDiv.innerHTML = '';
             }
         }
+
         const debouncedSearch = debounce(performSearch, 450);
         searchInput.addEventListener('input', debouncedSearch);
 
@@ -481,12 +458,13 @@
                 searchResultsDiv.appendChild(bookElement);
             });
         }
+
         closeSearchBtn.addEventListener('click', () => {
             searchResultsDiv.innerHTML = '';
             searchStatusDiv.textContent = '';
         });
 
-        // Manual Book Addition (no changes needed here)
+        // Manual Book Addition
         function addManualEntry() {
             const title = manualTitleInput.value.trim();
             const author = manualAuthorInput.value.trim() || "N/A";
@@ -498,7 +476,7 @@
                 manualTitleInput.focus();
                 return;
             }
-            if (link && !link.match(/^https?:\/\//i)) { // Case-insensitive check
+            if (link && !link.match(/^https?:\/\//)) {
                 manualAddStatusDiv.textContent = 'INVALID URL (use http/https)';
                 manualLinkInput.focus();
                 return;
@@ -532,12 +510,13 @@
             manualLinkInput.value = '';
             manualTitleInput.focus();
         }
+
         document.getElementById('manualEntryForm').addEventListener('submit', (e) => {
             e.preventDefault();
             addManualEntry();
         });
 
-        // Selection (Admin View) - Updated for Edit
+        // Selection (Admin View)
         function selectBook(buttonElement, key, title, authors, coverId, pageCount, isbn) {
             if (selectedBooks.some(b => b.key === key)) return;
 
@@ -552,7 +531,7 @@
                 isCustom: false,
                 isFreeform: false,
                 isManual: false,
-                link: openLibraryLink, // Default link for OL books
+                link: openLibraryLink,
                 votes: 0
             };
             selectedBooks.push(bookData);
@@ -565,12 +544,6 @@
         }
 
         function removeBook(keyToRemove) {
-            // Ensure no card is stuck in edit mode before removing
-            const cardInEdit = selectedBooksListDiv.querySelector(`.selected-card[data-key="${keyToRemove}"].is-editing`);
-            if (cardInEdit) {
-                 cancelEdit(keyToRemove, cardInEdit); // Revert edit mode first
-            }
-
             selectedBooks = selectedBooks.filter(book => book.key !== keyToRemove);
             displaySelectedBooksAdmin();
             const bookItemInSearch = searchResultsDiv.querySelector(`.book-item[data-key="${keyToRemove}"]`);
@@ -585,32 +558,21 @@
         }
 
         function generateLinksHtmlAdmin(book) {
-             // For Admin view, always show the editable link if present, plus standard links
-            let links = [];
-            if (book.link) {
-                 links.push(`<a href="${escapeHtmlBasic(book.link)}" target="_blank" rel="noopener">${book.isManual ? 'User Link' : 'Saved Link'}</a>`);
-            }
-            if (!book.isManual && book.key.startsWith('/works/')) {
-                 const olLink = `https://openlibrary.org${book.key}`;
-                 // Avoid duplicating if saved link is the OL link
-                 if (book.link !== olLink) {
-                     links.push(`<a href="${olLink}" target="_blank" rel="noopener">OL</a>`);
-                 }
-            }
+            if (book.isManual) return `<div class="links">${book.link ? `<a href="${escapeHtmlBasic(book.link)}" target="_blank" rel="noopener">User Link</a>` : ''}</div>`;
+            const openLibraryLink = book.link ? `<a href="${book.link}" target="_blank" rel="noopener">OL</a>` : '';
             const goodreadsQuery = book.isbn ? book.isbn : `${book.title} ${book.authors}`;
             const goodreadsSearchLink = `https://www.goodreads.com/search?q=${encodeURIComponent(goodreadsQuery)}`;
             const showGr = book.isbn || (book.title && book.title !== '???' && book.authors && book.authors !== '???');
-            if (showGr) {
-                 links.push(`<a href="${goodreadsSearchLink}" target="_blank" rel="noopener">GR</a>`);
-            }
-            return `<div class="links">${links.join(' | ')}</div>`;
+            const grLink = showGr ? `<a href="${goodreadsSearchLink}" target="_blank" rel="noopener">GR</a>` : '';
+            const separator = openLibraryLink && grLink ? ' | ' : '';
+            return `<div class="links">${openLibraryLink}${separator}${grLink}</div>`;
         }
 
         function displaySelectedBooksAdmin() {
             selectedBooksListDiv.innerHTML = '';
             pollShareArea.style.display = 'none';
             copyStatusDiv.textContent = '';
-            pollBooksTextarea.value = ''; // Clear textarea on redraw
+            pollBooksTextarea.value = '';
 
             const hasBooks = selectedBooks.length > 0;
             startPollBtn.disabled = !hasBooks;
@@ -623,198 +585,48 @@
             selectedBooks.forEach(book => {
                 const cardElement = document.createElement('div');
                 cardElement.classList.add('selected-card');
-                if(book.isManual) cardElement.classList.add('manual-entry');
-                cardElement.dataset.key = book.key; // Add key for easier targeting
-
                 let coverHtml = '';
-                if (book.isManual) {
-                    coverHtml = generateManualPlaceholderSvg(book.title);
-                } else {
-                    coverHtml = book.coverId ? `<img src="https://covers.openlibrary.org/b/id/${book.coverId}-M.jpg" alt="${escapeHtmlBasic(book.title)}" loading="lazy">` : selectedListPlaceholderSvg;
-                }
-                const pageCountDisplay = (book.pageCount && book.pageCount !== 'N/A') ? `${book.pageCount}p` : '';
-                const linksHtml = generateLinksHtmlAdmin(book);
 
-                // Structure with content wrapper and edit form placeholder
-                cardElement.innerHTML = `
-                    ${coverHtml}
-                    <div class="card-content">
+                if (book.isManual) {
+                    cardElement.classList.add('manual-entry');
+                    coverHtml = generateManualPlaceholderSvg(book.title);
+                    const manualLinkHtml = book.link
+                        ? `<div class="links"><a href="${escapeHtmlBasic(book.link)}" target="_blank" rel="noopener">User Link</a></div>`
+                        : '<div class="links"></div>';
+                    cardElement.innerHTML = `
+                        ${coverHtml}
                         <h3>${escapeHtmlBasic(book.title)}</h3>
                         <p><em>${escapeHtmlBasic(book.authors)}</em></p>
-                        ${book.isManual ? '<p>(Manual)</p>' : ''}
+                        <p>(Manual)</p>
+                        ${manualLinkHtml}
+                        <div class="card-actions"></div>
+                    `;
+                } else {
+                    coverHtml = book.coverId ? `<img src="https://covers.openlibrary.org/b/id/${book.coverId}-M.jpg" alt="${escapeHtmlBasic(book.title)}" loading="lazy">` : selectedListPlaceholderSvg;
+                    const pageCountDisplay = (book.pageCount && book.pageCount !== 'N/A') ? `${book.pageCount}p` : '';
+                    const linksHtml = generateLinksHtmlAdmin(book);
+                    cardElement.innerHTML = `
+                        ${coverHtml}
+                        <h3>${escapeHtmlBasic(book.title)}</h3>
+                        <p><em>${escapeHtmlBasic(book.authors)}</em></p>
                         ${pageCountDisplay ? `<p>${pageCountDisplay}</p>` : ''}
                         ${linksHtml}
-                    </div>
-                    <div class="edit-form">
-                        <label for="edit-title-${book.key}">Title:</label>
-                        <input type="text" id="edit-title-${book.key}" class="edit-input" value="${escapeHtmlBasic(book.title)}">
-                        <label for="edit-author-${book.key}">Author/Info:</label>
-                        <input type="text" id="edit-author-${book.key}" class="edit-input" value="${escapeHtmlBasic(book.authors)}">
-                        <label for="edit-link-${book.key}">Link (URL):</label>
-                        <input type="url" id="edit-link-${book.key}" class="edit-input" value="${escapeHtmlBasic(book.link || '')}" placeholder="http://...">
-                        <div id="editStatus-${book.key}" class="status-message error edit-status"></div>
-                    </div>
-                    <div class="card-actions"></div>
-                `;
+                        <div class="card-actions"></div>
+                    `;
+                }
 
                 const actionsDiv = cardElement.querySelector('.card-actions');
-
-                // -- Add Buttons (standard view) --
-                const editButton = document.createElement('button');
-                editButton.className = 'btn-edit';
-                editButton.textContent = 'Edit';
-                editButton.addEventListener('click', () => startEditMode(book.key, cardElement));
-
                 const removeButton = document.createElement('button');
                 removeButton.className = 'btn-remove';
                 removeButton.textContent = 'Remove';
                 removeButton.addEventListener('click', () => removeBook(book.key));
-
-                actionsDiv.appendChild(editButton);
                 actionsDiv.appendChild(removeButton);
-
-                // -- Add Save/Cancel Buttons (hidden initially) --
-                const saveButton = document.createElement('button');
-                saveButton.className = 'btn-save';
-                saveButton.textContent = 'Save';
-                saveButton.style.display = 'none'; // Hide initially
-                saveButton.addEventListener('click', () => saveEdit(book.key, cardElement));
-
-                const cancelButton = document.createElement('button');
-                cancelButton.className = 'btn-cancel'; // Use default button style
-                cancelButton.textContent = 'Cancel';
-                cancelButton.style.display = 'none'; // Hide initially
-                cancelButton.addEventListener('click', () => cancelEdit(book.key, cardElement));
-
-                actionsDiv.appendChild(saveButton);
-                actionsDiv.appendChild(cancelButton);
-
 
                 selectedBooksListDiv.appendChild(cardElement);
             });
         }
 
-        // --- Edit Functionality ---
-        function startEditMode(bookKey, cardElement) {
-            // Hide display content, show edit form
-            cardElement.classList.add('is-editing');
-
-            // Hide Edit/Remove, show Save/Cancel
-            const actionsDiv = cardElement.querySelector('.card-actions');
-            actionsDiv.querySelector('.btn-edit').style.display = 'none';
-            actionsDiv.querySelector('.btn-remove').style.display = 'none';
-            actionsDiv.querySelector('.btn-save').style.display = 'inline-block';
-            actionsDiv.querySelector('.btn-cancel').style.display = 'inline-block';
-
-            // Focus the title input
-            cardElement.querySelector(`#edit-title-${bookKey}`).focus();
-             // Clear any previous edit status
-            const editStatusDiv = cardElement.querySelector(`#editStatus-${bookKey}`);
-            if(editStatusDiv) editStatusDiv.textContent = '';
-        }
-
-        function saveEdit(bookKey, cardElement) {
-            const titleInput = cardElement.querySelector(`#edit-title-${bookKey}`);
-            const authorInput = cardElement.querySelector(`#edit-author-${bookKey}`);
-            const linkInput = cardElement.querySelector(`#edit-link-${bookKey}`);
-            const editStatusDiv = cardElement.querySelector(`#editStatus-${bookKey}`);
-            editStatusDiv.textContent = ''; // Clear previous status
-
-            const newTitle = titleInput.value.trim();
-            const newAuthor = authorInput.value.trim() || 'N/A'; // Default if empty
-            const newLink = linkInput.value.trim();
-
-            // Validation
-            if (!newTitle) {
-                editStatusDiv.textContent = 'TITLE NEEDED';
-                titleInput.focus();
-                return;
-            }
-            if (newLink && !newLink.match(/^https?:\/\//i)) {
-                 editStatusDiv.textContent = 'INVALID URL';
-                 linkInput.focus();
-                 return;
-            }
-
-            // Find book in array and update
-            const bookIndex = selectedBooks.findIndex(b => b.key === bookKey);
-            if (bookIndex > -1) {
-                selectedBooks[bookIndex].title = newTitle;
-                selectedBooks[bookIndex].authors = newAuthor;
-                selectedBooks[bookIndex].link = newLink;
-
-                // Update display immediately (re-render card content)
-                renderCardDisplayMode(selectedBooks[bookIndex], cardElement);
-
-                 // Exit edit mode visually
-                 cardElement.classList.remove('is-editing');
-                 const actionsDiv = cardElement.querySelector('.card-actions');
-                 actionsDiv.querySelector('.btn-edit').style.display = 'inline-block';
-                 actionsDiv.querySelector('.btn-remove').style.display = 'inline-block';
-                 actionsDiv.querySelector('.btn-save').style.display = 'none';
-                 actionsDiv.querySelector('.btn-cancel').style.display = 'none';
-
-                 // Clear textarea if poll was already generated, as data changed
-                 if (pollShareArea.style.display === 'block') {
-                     pollBooksTextarea.value = 'Book details changed. Re-create poll if needed.';
-                 }
-
-            } else {
-                console.error("Book not found for saving edit:", bookKey);
-                editStatusDiv.textContent = 'SAVE ERROR';
-            }
-        }
-
-        function cancelEdit(bookKey, cardElement) {
-            // Find original book data to reset inputs if needed (optional, but good practice)
-             const bookIndex = selectedBooks.findIndex(b => b.key === bookKey);
-             if (bookIndex > -1) {
-                 const originalBook = selectedBooks[bookIndex];
-                 cardElement.querySelector(`#edit-title-${bookKey}`).value = escapeHtmlBasic(originalBook.title);
-                 cardElement.querySelector(`#edit-author-${bookKey}`).value = escapeHtmlBasic(originalBook.authors);
-                 cardElement.querySelector(`#edit-link-${bookKey}`).value = escapeHtmlBasic(originalBook.link || '');
-             }
-             const editStatusDiv = cardElement.querySelector(`#editStatus-${bookKey}`);
-             if(editStatusDiv) editStatusDiv.textContent = ''; // Clear status
-
-            // Just toggle visibility back
-            cardElement.classList.remove('is-editing');
-            const actionsDiv = cardElement.querySelector('.card-actions');
-            actionsDiv.querySelector('.btn-edit').style.display = 'inline-block';
-            actionsDiv.querySelector('.btn-remove').style.display = 'inline-block';
-            actionsDiv.querySelector('.btn-save').style.display = 'none';
-            actionsDiv.querySelector('.btn-cancel').style.display = 'none';
-        }
-
-        // Helper to update the display part of a card after edit/cancel
-        function renderCardDisplayMode(book, cardElement) {
-             const contentDiv = cardElement.querySelector('.card-content');
-             const pageCountDisplay = (book.pageCount && book.pageCount !== 'N/A') ? `${book.pageCount}p` : '';
-             const linksHtml = generateLinksHtmlAdmin(book);
-
-             contentDiv.innerHTML = `
-                 <h3>${escapeHtmlBasic(book.title)}</h3>
-                 <p><em>${escapeHtmlBasic(book.authors)}</em></p>
-                 ${book.isManual ? '<p>(Manual)</p>' : ''}
-                 ${pageCountDisplay ? `<p>${pageCountDisplay}</p>` : ''}
-                 ${linksHtml}
-             `;
-             // Update cover if manual title changed (affects placeholder)
-             if (book.isManual) {
-                 const coverContainer = cardElement.querySelector('.manual-placeholder-svg');
-                 if (coverContainer) {
-                     // Replace the SVG element directly
-                     const newSvg = generateManualPlaceholderSvg(book.title);
-                     const tempDiv = document.createElement('div');
-                     tempDiv.innerHTML = newSvg;
-                     coverContainer.replaceWith(tempDiv.firstChild);
-                 }
-             }
-        }
-        // --- End Edit Functionality ---
-
-
-        // Poll Creation with Automatic Book Info Textarea (modified to use current state)
+        // Poll Creation with Automatic Book Info Textarea
         async function startPoll() {
             if (!database) {
                 startPollStatus.textContent = "DB ERROR";
@@ -824,26 +636,19 @@
                 startPollStatus.textContent = "NEED BOOKS";
                 return;
             }
-             // Check if any card is in edit mode
-            if (selectedBooksListDiv.querySelector('.selected-card.is-editing')) {
-                startPollStatus.textContent = "FINISH EDITING";
-                return;
-            }
-
             startPollStatus.textContent = "";
             startPollBtn.disabled = true;
             startPollBtn.textContent = "Working...";
             pollShareArea.style.display = 'none';
 
             const pollOptions = {};
-            // Use the current state of selectedBooks, which includes any edits
             selectedBooks.forEach(book => {
                 const safeKey = sanitizeKey(book.key);
                 pollOptions[safeKey] = {
                     title: book.title,
-                    author: book.authors, // Use 'authors' property consistently
+                    author: book.authors,
                     pageCount: book.pageCount,
-                    link: book.link, // Use the potentially edited link
+                    link: book.link,
                     isbn: book.isbn,
                     coverId: book.coverId,
                     isCustom: book.isCustom,
@@ -865,21 +670,19 @@
                 pollShareLink.textContent = shareUrl;
                 pollShareLink.href = shareUrl;
 
-                // Generate book info text with sanitization (using current selectedBooks data)
+                // Generate book info text with sanitization
                 let booksText = '';
                 try {
                     booksText = selectedBooks.map(book => {
                         const title = escapeHtmlBasic(book.title || "Unknown Title");
-                        const author = escapeHtmlBasic(book.authors || "Unknown Author"); // Use 'authors'
+                        const author = escapeHtmlBasic(book.authors || "Unknown Author");
                         let bestLink = '';
-
-                        // Prioritize the potentially edited link
-                        if (book.link) {
-                             bestLink = escapeHtmlBasic(book.link);
-                        } else if (book.isbn) { // Fallback to Goodreads if no specific link
+                        if (book.isManual && book.link) {
+                            bestLink = escapeHtmlBasic(book.link);
+                        } else if (book.isbn) {
                             bestLink = `https://www.goodreads.com/search?q=${encodeURIComponent(book.isbn)}`;
-                        } else if (!book.isManual && book.key.startsWith('/works/')) { // Fallback to OL if no link/ISBN
-                            bestLink = `https://openlibrary.org${book.key}`;
+                        } else if (!book.isManual && book.link) {
+                            bestLink = escapeHtmlBasic(book.link);
                         }
                         return bestLink ? `${title} - ${author}\nLink: ${bestLink}` : `${title} - ${author}`;
                     }).join('\n\n');
@@ -896,7 +699,7 @@
             } catch (error) {
                 console.error("Poll Start Error:", error);
                 startPollStatus.textContent = "POLL ERR";
-                startPollBtn.disabled = false; // Re-enable button on error
+                startPollBtn.disabled = false;
                 startPollBtn.textContent = "MAKE_POLL";
             }
         }
@@ -921,155 +724,131 @@
                 copyStatusDiv.style.color = 'var(--danger-color)';
             }
         }
+
         pollShareArea.querySelector('button').addEventListener('click', copyPollLink);
 
-
-        // Poll Loading & Display (Modified to use 'author' consistently)
+        // Poll Loading & Display
         function loadPoll(pollId) {
-             if (!database) {
-                 pollTitleH1.textContent = "DATABASE ERROR";
-                 pollOptionsDiv.innerHTML = '<p class="placeholder-text error">[[ Cannot connect to Database ]]</p>';
-                 return;
-             }
-             adminAreaDiv.style.display = 'none';
-             pollViewDiv.style.display = 'block';
-             votesRevealed = false;
-             pollViewDiv.classList.remove('votes-revealed');
-             revealVotesArea.style.display = 'none';
-             revealVotesBtn.disabled = false;
-             revealVotesBtn.textContent = 'Reveal Votes';
+            if (!database) {
+                pollTitleH1.textContent = "DATABASE ERROR";
+                pollOptionsDiv.innerHTML = '<p class="placeholder-text error">[[ Cannot connect to Database ]]</p>';
+                return;
+            }
+            adminAreaDiv.style.display = 'none';
+            pollViewDiv.style.display = 'block';
+            votesRevealed = false;
+            pollViewDiv.classList.remove('votes-revealed');
+            revealVotesArea.style.display = 'none';
+            revealVotesBtn.disabled = false;
+            revealVotesBtn.textContent = 'Reveal Votes';
 
-             const pollRef = ref(database, `polls/${pollId}`);
-             if (pollDataListener) pollDataListener(); // Detach previous listener if any
+            const pollRef = ref(database, `polls/${pollId}`);
+            if (pollDataListener) pollDataListener();
 
-             pollTitleH1.textContent = "LOADING POLL...";
-             pollOptionsDiv.innerHTML = '<p class="placeholder-text">[[ Waiting For Data ]]</p>';
+            pollTitleH1.textContent = "LOADING POLL...";
+            pollOptionsDiv.innerHTML = '<p class="placeholder-text">[[ Waiting For Data ]]</p>';
 
-             pollDataListener = onValue(pollRef, (snapshot) => {
-                 if (!snapshot.exists()) {
-                     pollTitleH1.textContent = "POLL NOT FOUND";
-                     pollOptionsDiv.innerHTML = '<p class="placeholder-text error">[[ Invalid Poll ID ]]</p>';
-                     revealVotesArea.style.display = 'none';
-                     console.error("Poll data not found for ID:", pollId);
-                     return;
-                 }
-                 currentPollData = snapshot.val();
-                 pollTitleH1.textContent = currentPollData.title || "BOOK VOTE";
-                 pollOptionsDiv.innerHTML = ''; // Clear previous options
+            pollDataListener = onValue(pollRef, (snapshot) => {
+                if (!snapshot.exists()) {
+                    pollTitleH1.textContent = "POLL NOT FOUND";
+                    pollOptionsDiv.innerHTML = '<p class="placeholder-text error">[[ Invalid Poll ID ]]</p>';
+                    revealVotesArea.style.display = 'none';
+                    console.error("Poll data not found for ID:", pollId);
+                    return;
+                }
+                currentPollData = snapshot.val();
+                pollTitleH1.textContent = currentPollData.title || "BOOK VOTE";
+                pollOptionsDiv.innerHTML = '';
 
-                 // Clear existing winner classes before re-rendering
-                 const existingCards = pollOptionsDiv.querySelectorAll('.poll-option-card.winner');
-                 existingCards.forEach(card => card.classList.remove('winner'));
+                const existingCards = pollOptionsDiv.querySelectorAll('.poll-option-card.winner');
+                existingCards.forEach(card => card.classList.remove('winner'));
 
-                 if (!currentPollData.options || Object.keys(currentPollData.options).length === 0) {
-                     pollOptionsDiv.innerHTML = '<p class="placeholder-text">[[ No Books In Poll ]]</p>';
-                     revealVotesArea.style.display = 'none';
-                     return;
-                 }
+                if (!currentPollData.options || Object.keys(currentPollData.options).length === 0) {
+                    pollOptionsDiv.innerHTML = '<p class="placeholder-text">[[ No Books In Poll ]]</p>';
+                    revealVotesArea.style.display = 'none';
+                    return;
+                }
 
-                 revealVotesArea.style.display = 'block'; // Show reveal button area
+                revealVotesArea.style.display = 'block';
 
-                 Object.entries(currentPollData.options).forEach(([key, book]) => {
-                     const cardElement = document.createElement('div');
-                     cardElement.classList.add('poll-option-card');
-                     cardElement.dataset.key = key;
+                Object.entries(currentPollData.options).forEach(([key, book]) => {
+                    const cardElement = document.createElement('div');
+                    cardElement.classList.add('poll-option-card');
+                    cardElement.dataset.key = key;
 
-                     let coverHtml = '';
-                     const voteCount = book.votes || 0;
-                     let linksHtml = '';
+                    let coverHtml = '';
+                    const voteCount = book.votes || 0;
+                    let linksHtml = '';
 
-                     // Use consistent 'author' field from poll data
-                     const displayAuthor = book.author || 'N/A';
+                    if (book.isManual) {
+                        coverHtml = generateManualPlaceholderSvg(book.title);
+                        linksHtml = book.link
+                            ? `<div class="links"><a href="${escapeHtmlBasic(book.link)}" target="_blank" rel="noopener">User Link</a></div>`
+                            : '<div class="links"></div>';
+                        cardElement.innerHTML = `
+                            <div class="poll-card-content">
+                                ${coverHtml}
+                                <h4>${escapeHtmlBasic(book.title)}</h4>
+                                <p><em>${escapeHtmlBasic(book.author)}</em></p>
+                                <p>(Manual)</p>
+                                ${linksHtml}
+                            </div>
+                            <div class="vote-area">
+                                <span class="vote-count" id="votes-${key}">${voteCount} Votes</span>
+                            </div>
+                        `;
+                    } else {
+                        coverHtml = book.coverId ? `<img src="https://covers.openlibrary.org/b/id/${book.coverId}-M.jpg" alt="${escapeHtmlBasic(book.title)}" loading="lazy">`
+                            : selectedListPlaceholderSvg;
+                        const pageCountDisplay = (book.pageCount && book.pageCount !== 'N/A') ? `${book.pageCount}p` : '';
+                        linksHtml = generateLinksHtmlVoter(book);
+                        cardElement.innerHTML = `
+                            <div class="poll-card-content">
+                                ${coverHtml}
+                                <h4>${escapeHtmlBasic(book.title)}</h4>
+                                <p><em>${escapeHtmlBasic(book.author)}</em></p>
+                                ${pageCountDisplay ? `<p>${pageCountDisplay}</p>` : ''}
+                                ${linksHtml}
+                            </div>
+                            <div class="vote-area">
+                                <span class="vote-count" id="votes-${key}">${voteCount} Votes</span>
+                            </div>
+                        `;
+                    }
+                    const voteArea = cardElement.querySelector('.vote-area');
+                    const voteButton = document.createElement('button');
+                    voteButton.className = 'btn-vote';
+                    voteButton.id = `btn-${key}`;
+                    voteButton.textContent = 'Vote';
+                    voteButton.addEventListener('click', () => castVote(key));
+                    voteArea.appendChild(voteButton);
+                    pollOptionsDiv.appendChild(cardElement);
+                });
 
-                     if (book.isManual) {
-                         coverHtml = generateManualPlaceholderSvg(book.title);
-                         linksHtml = book.link
-                             ? `<div class="links"><a href="${escapeHtmlBasic(book.link)}" target="_blank" rel="noopener">User Link</a></div>`
-                             : '<div class="links"></div>';
-                         cardElement.innerHTML = `
-                             <div class="poll-card-content">
-                                 ${coverHtml}
-                                 <h4>${escapeHtmlBasic(book.title)}</h4>
-                                 <p><em>${escapeHtmlBasic(displayAuthor)}</em></p>
-                                 <p>(Manual)</p>
-                                 ${linksHtml}
-                             </div>
-                             <div class="vote-area">
-                                 <span class="vote-count" id="votes-${key}">${voteCount} Votes</span>
-                             </div>
-                         `;
-                     } else {
-                         coverHtml = book.coverId ? `<img src="https://covers.openlibrary.org/b/id/${book.coverId}-M.jpg" alt="${escapeHtmlBasic(book.title)}" loading="lazy">`
-                             : selectedListPlaceholderSvg;
-                         const pageCountDisplay = (book.pageCount && book.pageCount !== 'N/A') ? `${book.pageCount}p` : '';
-                         linksHtml = generateLinksHtmlVoter(book); // Pass the whole book object
-                         cardElement.innerHTML = `
-                             <div class="poll-card-content">
-                                 ${coverHtml}
-                                 <h4>${escapeHtmlBasic(book.title)}</h4>
-                                 <p><em>${escapeHtmlBasic(displayAuthor)}</em></p>
-                                 ${pageCountDisplay ? `<p>${pageCountDisplay}</p>` : ''}
-                                 ${linksHtml}
-                             </div>
-                             <div class="vote-area">
-                                 <span class="vote-count" id="votes-${key}">${voteCount} Votes</span>
-                             </div>
-                         `;
-                     }
-                     const voteArea = cardElement.querySelector('.vote-area');
-                     const voteButton = document.createElement('button');
-                     voteButton.className = 'btn-vote';
-                     voteButton.id = `btn-${key}`;
-                     voteButton.textContent = 'Vote';
-                     voteButton.addEventListener('click', () => castVote(key));
-                     voteArea.appendChild(voteButton);
-                     pollOptionsDiv.appendChild(cardElement);
-                 });
-
-                 // Apply highlighting if votes were already revealed on a previous load
-                 if (votesRevealed) {
-                     applyWinnerHighlighting();
-                     pollViewDiv.classList.add('votes-revealed'); // Ensure class is set
-                     revealVotesBtn.textContent = 'Results Shown';
-                     revealVotesBtn.disabled = true;
-                 }
-                 checkIfVoted(); // Check voting status after rendering
-
-             }, (error) => {
-                 console.error("Firebase poll read failed:", error);
-                 pollTitleH1.textContent = "ERROR LOADING POLL";
-                 pollOptionsDiv.innerHTML = '<p class="placeholder-text error">[[ Could not load poll data ]]</p>';
-                 pollVoteStatusDiv.textContent = "LOAD ERROR";
-                 pollVoteStatusDiv.style.color = "var(--danger-color)";
-                 revealVotesArea.style.display = 'none';
-             });
+                if (votesRevealed) applyWinnerHighlighting();
+                checkIfVoted();
+            }, (error) => {
+                console.error("Firebase poll read failed:", error);
+                pollTitleH1.textContent = "ERROR LOADING POLL";
+                pollOptionsDiv.innerHTML = '<p class="placeholder-text error">[[ Could not load poll data ]]</p>';
+                pollVoteStatusDiv.textContent = "LOAD ERROR";
+                pollVoteStatusDiv.style.color = "var(--danger-color)";
+                revealVotesArea.style.display = 'none';
+            });
         }
 
         function generateLinksHtmlVoter(book) {
-            // Voter links prioritize the 'link' saved in the poll data
-            let links = [];
-             if (book.link) {
-                 links.push(`<a href="${escapeHtmlBasic(book.link)}" target="_blank" rel="noopener">${book.isManual ? 'User Link' : 'Info Link'}</a>`);
-            }
-            // Add GR link as secondary option if applicable and not the same as primary link
-            const goodreadsQuery = book.isbn ? book.isbn : `${book.title} ${book.author || ''}`;
+            if (book.isManual) return `<div class="links">${book.link ? `<a href="${escapeHtmlBasic(book.link)}" target="_blank" rel="noopener">User Link</a>` : ''}</div>`;
+            const openLibraryLink = book.link ? `<a href="${book.link}" target="_blank" rel="noopener">OL</a>` : '';
+            const goodreadsQuery = book.isbn ? book.isbn : `${book.title} ${book.author}`;
             const goodreadsSearchLink = `https://www.goodreads.com/search?q=${encodeURIComponent(goodreadsQuery)}`;
-            const showGr = !book.isManual && (book.isbn || (book.title && book.title !== '???' && book.author && book.author !== '???'));
-
-            if (showGr && book.link !== goodreadsSearchLink) {
-                 links.push(`<a href="${goodreadsSearchLink}" target="_blank" rel="noopener">GR</a>`);
-            }
-            // Maybe add OL link if it's not the primary one? Less common for voters.
-            // const olKey = book.key; // Original key might not be in poll data easily
-            // if (!book.isManual && olKey && olKey.startsWith('/works/') && book.link !== `https://openlibrary.org${olKey}`) {
-            //     links.push(`<a href="https://openlibrary.org${olKey}" target="_blank" rel="noopener">OL</a>`);
-            // }
-
-            return `<div class="links">${links.join(' | ')}</div>`;
+            const showGr = book.isbn || (book.title && book.title !== '???' && book.author && book.author !== '???');
+            const grLink = showGr ? `<a href="${goodreadsSearchLink}" target="_blank" rel="noopener">GR</a>` : '';
+            const separator = openLibraryLink && grLink ? ' | ' : '';
+            return `<div class="links">${openLibraryLink}${separator}${grLink}</div>`;
         }
 
-
-        // Voting (no changes needed here)
+        // Voting
         async function castVote(bookKey) {
             if (!database) {
                 pollVoteStatusDiv.textContent = "DB ERROR";
@@ -1089,30 +868,19 @@
             pollVoteStatusDiv.textContent = "VOTING...";
             pollVoteStatusDiv.style.color = "var(--primary-color)";
             try {
-                // Ensure currentPollData.options[bookKey] exists before accessing votes
-                 if (!currentPollData || !currentPollData.options || !currentPollData.options[bookKey]) {
-                    throw new Error(`Book key ${bookKey} not found in current poll data.`);
-                 }
-                const currentVotes = currentPollData.options[bookKey].votes || 0;
                 const votePath = `polls/${currentPollId}/options/${bookKey}`;
-                await update(ref(database, votePath), { votes: currentVotes + 1 });
+                await update(ref(database, votePath), { votes: (currentPollData.options[bookKey].votes || 0) + 1 });
                 pollVoteStatusDiv.textContent = "VOTE OK";
                 pollVoteStatusDiv.style.color = "var(--success-color)";
                 localStorage.setItem(votedPollKey, bookKey);
-                // No need to call checkIfVoted immediately, onValue will update the view
+                checkIfVoted();
             } catch (error) {
                 console.error("Vote Error:", error);
                 pollVoteStatusDiv.textContent = "VOTE ERR";
                 pollVoteStatusDiv.style.color = "var(--danger-color)";
-                checkIfVoted(); // Re-enable buttons if error occurred before vote counted
+                checkIfVoted();
             }
-             // Use timeout to clear status message only if it wasn't updated by vote success/localstorage check
-            setTimeout(() => {
-                const currentStatus = pollVoteStatusDiv.textContent;
-                 if (currentStatus === "VOTE OK" || currentStatus === "VOTING...") {
-                     pollVoteStatusDiv.textContent = checkIfVoted() ? "VOTED" : '';
-                 }
-             }, 3000);
+            setTimeout(() => { pollVoteStatusDiv.textContent = checkIfVoted() ? "VOTED" : ''; }, 3000);
         }
 
         function disableAllVoteButtons() {
@@ -1128,23 +896,19 @@
 
             if (hasVoted || votesRevealed) {
                 buttons.forEach(button => button.disabled = true);
-                // Update status only if it's not showing an error or confirmation already
-                 if (hasVoted && (!pollVoteStatusDiv.textContent || pollVoteStatusDiv.textContent === "VOTING..." || pollVoteStatusDiv.textContent === "VOTE OK")) {
+                if (hasVoted && (!pollVoteStatusDiv.textContent || pollVoteStatusDiv.textContent === "VOTING...")) {
                     pollVoteStatusDiv.textContent = "VOTED";
                     pollVoteStatusDiv.style.color = "var(--subtle-text-color)";
                 }
                 return true;
             } else {
                 buttons.forEach(button => button.disabled = false);
-                // Clear status only if it indicates a previous vote
-                 if (pollVoteStatusDiv.textContent === "VOTED") {
-                     pollVoteStatusDiv.textContent = "";
-                 }
+                if (pollVoteStatusDiv.textContent === "VOTED") pollVoteStatusDiv.textContent = "";
                 return false;
             }
         }
 
-        // Reveal Votes (no changes needed here)
+        // Reveal Votes
         function revealVotes() {
             if (!currentPollData || !currentPollData.options || votesRevealed) return;
             votesRevealed = true;
@@ -1158,9 +922,9 @@
                 pollVoteStatusDiv.style.color = "var(--subtle-text-color)";
             }
         }
+
         revealVotesBtn.addEventListener('click', revealVotes);
 
-        // Apply Winner Highlighting (no changes needed here, CSS handles the background)
         function applyWinnerHighlighting() {
             if (!currentPollData || !currentPollData.options) return;
             let maxVotes = -1;
@@ -1169,7 +933,7 @@
             });
 
             const allCards = pollOptionsDiv.querySelectorAll('.poll-option-card');
-            allCards.forEach(card => card.classList.remove('winner')); // Ensure clean slate
+            allCards.forEach(card => card.classList.remove('winner'));
 
             if (maxVotes > 0) {
                 Object.entries(currentPollData.options).forEach(([key, book]) => {
@@ -1181,7 +945,7 @@
             }
         }
 
-        // Initialization (no changes needed here)
+        // Initialization
         window.addEventListener('load', () => {
             if (!database) {
                 console.error("Database not initialized");
@@ -1194,16 +958,13 @@
             } else {
                 adminAreaDiv.style.display = 'block';
                 pollViewDiv.style.display = 'none';
-                displaySelectedBooksAdmin(); // Initial display of admin books
+                displaySelectedBooksAdmin();
             }
         });
 
-        // Cleanup (no changes needed here)
+        // Cleanup
         window.addEventListener('beforeunload', () => {
-            if (pollDataListener && currentPollId) {
-                 // Detach listener properly - Firebase v9+ returns the unsub function directly
-                 pollDataListener();
-            }
+            if (pollDataListener && currentPollId) pollDataListener();
         });
     </script>
 </head>
@@ -1247,7 +1008,7 @@
                 <h2>Selected books</h2>
                 <div class="section-content">
                     <div id="selectedBooksList">
-                        <p class="placeholder-text"></p> <!-- Initial placeholder -->
+                        <p class="placeholder-text"></p>
                     </div>
                     <div class="admin-action-buttons">
                         <button id="startPollBtn">MAKE_POLL</button>
@@ -1258,7 +1019,7 @@
                         <a id="pollShareLink" href="#" target="_blank" rel="noopener noreferrer"></a>
                         <button style="margin-top: 10px;">Copy_Link</button>
                         <div id="copyStatus" class="status-message"></div>
-                        <textarea id="pollBooksTextarea" readonly placeholder="Book info for copy/paste..."></textarea>
+                        <textarea id="pollBooksTextarea" readonly></textarea>
                     </div>
                 </div>
             </section>
