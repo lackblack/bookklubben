@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=VT323&display=swap" rel="stylesheet">
     <style>
-        
+        /* --- Retro Computing Vibe - Deluxe v2 --- */
         :root {
             --bg-color: #d8d4c8;
             --card-bg: #ece8dc;
@@ -210,22 +210,13 @@
         .selected-card .links a { color: var(--primary-color); text-decoration: underline; margin: 0 5px; }
         .selected-card .links a:hover { color: var(--primary-hover-color); }
 
-        /* ---vvv--- Card Buttons Area ---vvv--- */
         .selected-card .card-actions {
-             margin-top: auto; /* Pushes buttons to the bottom */
-             display: flex; /* Use flexbox */
-             justify-content: center; /* Center buttons */
-             gap: 10px; /* Space between buttons */
-             flex-wrap: wrap; /* Allow wrapping */
-             padding-top: 10px; /* Space above buttons */
-             flex-shrink: 0;
+             margin-top: auto; display: flex; justify-content: center;
+             gap: 10px; flex-wrap: wrap; padding-top: 10px; flex-shrink: 0;
         }
         .selected-card .card-actions button {
-             font-size: 0.9em; padding: 5px 12px; width: auto; height: 30px; padding-top: 4px;
-             margin: 0; /* Remove default margins if any */
+             font-size: 0.9em; padding: 5px 12px; width: auto; height: 30px; padding-top: 4px; margin: 0;
         }
-        /* ---^^^--- END Card Buttons Area ---^^^--- */
-
 
         /* Manual Card Specific */
          .selected-card.manual-entry { border-style: outset; }
@@ -314,15 +305,12 @@
 
 
          /* Admin Action Buttons Area */
-         .admin-action-buttons {
-             text-align: center; margin-top: 25px;
-         }
+         .admin-action-buttons { text-align: center; margin-top: 25px; }
          /* Status messages for buttons */
-         #copyInfoStatus, /* Re-purposed for single copy feedback */
+         #copyInfoStatus, /* Single copy feedback */
          #copyStatus, /* Poll Link Copy feedback */
          #startPollStatus {
-             min-height: 1.3em; margin-top: 5px; font-size: 0.9em;
-             text-align: center;
+             min-height: 1.3em; margin-top: 5px; font-size: 0.9em; text-align: center;
          }
 
 
@@ -369,7 +357,7 @@
                              <input type="text" id="manualTitleInput" placeholder="(Required)" aria-label="Manual Book Title">
                          </div>
                          <div class="manual-field-group">
-                              <label for="manualAuthorInput">Author/Info:</label>
+                              <label for="manualAuthorInput">Info:</label>
                              <input type="text" id="manualAuthorInput" placeholder="(Optional)" aria-label="Manual Book Author">
                          </div>
                          <div class="manual-field-group">
@@ -429,17 +417,23 @@
 </div>
 
 <script>
-   
+    // ---vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv---
+    // --- PASTE YOUR ACTUAL FIREBASE CONFIGURATION HERE ---
+    // ---vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv---
     const firebaseConfig = {
       apiKey: "AIzaSyAPi4OmZieXOwy3fDhXPPt9ac_KCE0_hkw",
       authDomain: "book-klubben-236e1.firebaseapp.com",
-      databaseURL: "https://book-klubben-236e1-default-rtdb.europe-west1.firebasedatabase.app", 
+      databaseURL: "https://book-klubben-236e1-default-rtdb.europe-west1.firebasedatabase.app", // VERIFY THIS
       projectId: "book-klubben-236e1",
       storageBucket: "book-klubben-236e1.appspot.com",
       messagingSenderId: "245694652120",
       appId: "1:245694652120:web:f550759de576dea4c7c1ad"
     };
-  
+    // ---^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^---
+    // --- END OF FIREBASE CONFIGURATION                 ---
+    // ---^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^---
+
+    // Initialize Firebase
     let database;
     try {
          if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
@@ -473,8 +467,8 @@
     const closeSearchBtn = document.getElementById('closeSearchBtn');
     const revealVotesArea = document.getElementById('revealVotesArea');
     const revealVotesBtn = document.getElementById('revealVotesBtn');
-    const copyInfoTextarea = document.getElementById('copyInfoTextarea'); // Reused hidden textarea
-    const copyInfoStatus = document.getElementById('copyInfoStatus'); // Reused status div for single copies
+    const copyInfoTextarea = document.getElementById('copyInfoTextarea');
+    const copyInfoStatus = document.getElementById('copyInfoStatus'); // Single copy feedback
 
     // --- State ---
     let selectedBooks = [];
@@ -557,10 +551,11 @@
 
             const escapeForJsString = (str) => {
                 if (typeof str !== 'string') str = String(str || '');
-                return str.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '\\"');
+                 // Escape backslash first, then single quote
+                return str.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
             };
 
-            const escapedKey = escapeForJsString(bookKey);
+            const escapedKey = escapeForJsString(bookKey); // Use correct escaper
             const escapedTitle = escapeForJsString(title);
             const escapedAuthors = escapeForJsString(authors);
             const escapedCoverId = escapeForJsString(coverId);
@@ -574,6 +569,7 @@
             bookElement.className = `book-item${isSelected ? ' selected' : ''}`;
             bookElement.dataset.key = bookKey;
 
+            // Use correctly escaped values
             const onclickAttr = `selectBook(this, '${escapedKey}', '${escapedTitle}', '${escapedAuthors}', '${escapedCoverId}', '${escapedPageCount}', '${escapedIsbn}')`;
 
             bookElement.innerHTML = `
@@ -634,6 +630,9 @@
 
     // --- Selection (Admin View) ---
     function selectBook(buttonElement, key, title, authors, coverId, pageCount, isbn) {
+         // NOTE: key, title etc. are passed already escaped for JS string literals
+         // We should technically unescape them if needed for internal storage,
+         // but since we only use 'key' directly and re-escape it later, it's okay for now.
         if (selectedBooks.some(b => b.key === key)) return;
 
         const openLibraryLink = key.startsWith('/works/') ? `https://openlibrary.org${key}` : '';
@@ -677,12 +676,12 @@
         return `<div class="links">${openLibraryLink}${separator}${grLink}</div>`;
     }
 
-    // --- ---vvv--- UPDATED Display Selected Books ---vvv--- ---
+    // --- Display Selected Books (Admin) ---
     function displaySelectedBooksAdmin() {
         selectedBooksListDiv.innerHTML = '';
         pollShareArea.style.display = 'none';
-        copyStatusDiv.textContent = ''; // Clear poll link copy status
-        copyInfoStatus.textContent = ''; // Clear single book copy status
+        copyStatusDiv.textContent = '';
+        copyInfoStatus.textContent = '';
 
         const hasBooks = selectedBooks.length > 0;
         startPollBtn.disabled = !hasBooks;
@@ -698,8 +697,10 @@
             let cardContent = '';
             let coverHtml = '';
 
-            // Escape book key for use in onclick attribute
-            const escapedKey = escapeHtmlBasic(book.key.replace(/'/g, "\\'"));
+            // ---vvv--- CORRECTED ESCAPING FOR ONCLICK ---vvv---
+            // Escape backslashes first, then single quotes for JS string literal
+            const escapedKeyForJs = book.key.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+            // ---^^^--- END CORRECTION ---^^^---
 
             if (book.isManual) { // Manual Entry
                 cardElement.classList.add('manual-entry');
@@ -715,8 +716,9 @@
                     <p>(Manual)</p>
                     ${manualLinkHtml}
                     <div class="card-actions">
-                        <button class="btn-copy-single" onclick="copySingleBookInfo('${escapedKey}')">Copy</button>
-                        <button class="btn-remove" onclick="removeBook('${escapedKey}')">Remove</button>
+                        {/* Use correctly escaped key */}
+                        <button class="btn-copy-single" onclick="copySingleBookInfo('${escapedKeyForJs}')">Copy</button>
+                        <button class="btn-remove" onclick="removeBook('${escapedKeyForJs}')">Remove</button>
                     </div>
                 `;
             } else { // Standard Entry
@@ -730,8 +732,9 @@
                     ${pageCountDisplay ? `<p>${pageCountDisplay}</p>` : ''}
                     ${linksHtml}
                     <div class="card-actions">
-                        <button class="btn-copy-single" onclick="copySingleBookInfo('${escapedKey}')">Copy</button>
-                        <button class="btn-remove" onclick="removeBook('${escapedKey}')">Remove</button>
+                         {/* Use correctly escaped key */}
+                        <button class="btn-copy-single" onclick="copySingleBookInfo('${escapedKeyForJs}')">Copy</button>
+                        <button class="btn-remove" onclick="removeBook('${escapedKeyForJs}')">Remove</button>
                     </div>
                 `;
             }
@@ -739,7 +742,6 @@
             selectedBooksListDiv.appendChild(cardElement);
         });
     }
-    // --- ---^^^--- END UPDATED Display Selected Books ---^^^--- ---
 
     // --- Poll Creation (Firebase) ---
     async function startPoll() {
@@ -788,8 +790,9 @@
         });
      }
 
-    // --- ---vvv--- NEW Copy Single Book Info ---vvv--- ---
+    // --- Copy Single Book Info ---
     function copySingleBookInfo(bookKey) {
+        // Find the book in our current state
         const book = selectedBooks.find(b => b.key === bookKey);
         if (!book) {
             copyInfoStatus.textContent = "BOOK NOT FOUND?";
@@ -802,7 +805,7 @@
         const author = book.authors || "Unknown Author";
         let bestLink = "";
 
-        // Determine best link (same logic as before)
+        // Determine best link
         if (book.isManual && book.link) {
             bestLink = book.link;
         } else if (book.isbn) {
@@ -816,12 +819,13 @@
             infoString += `Link: ${bestLink}`;
         }
 
-        copyInfoTextarea.value = infoString.trim(); // Put text in hidden textarea
+        copyInfoTextarea.value = infoString.trim();
         copyInfoTextarea.select();
 
         try {
              navigator.clipboard.writeText(copyInfoTextarea.value).then(() => {
-                 copyInfoStatus.textContent = `"${title}" INFO COPIED!`; // Provide specific feedback
+                 // Give feedback in the general status area below the cards
+                 copyInfoStatus.textContent = `"${title.substring(0,15)}..." COPIED!`; // Truncate title
                  copyInfoStatus.style.color = "var(--success-color)";
                  setTimeout(() => { copyInfoStatus.textContent = ''; }, 3000);
              }).catch(err => { throw err; });
@@ -831,7 +835,7 @@
             copyInfoStatus.style.color = "var(--danger-color)";
              try { // Fallback
                 document.execCommand('copy');
-                copyInfoStatus.textContent = `"${title}" INFO COPIED! (Fallback)`;
+                copyInfoStatus.textContent = `"${title.substring(0,15)}..." COPIED! (Fallback)`;
                 copyInfoStatus.style.color = "var(--success-color)";
                 setTimeout(() => { copyInfoStatus.textContent = ''; }, 3000);
             } catch (execErr) {
@@ -842,7 +846,6 @@
         }
         window.getSelection().removeAllRanges(); // Deselect
     }
-    // --- ---^^^--- END NEW Copy Single Book Info ---^^^--- ---
 
 
     // --- Poll Loading & Display ---
