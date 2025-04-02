@@ -71,9 +71,8 @@
         }
         input[type="text"]:focus, input[type="url"]:focus, textarea:focus { background-color: #fff; }
         textarea { resize: vertical; min-height: 60px; }
-        #copyInfoTextarea {
-            position: absolute; left: -9999px; top: auto;
-            width: 1px; height: 1px; overflow: hidden; opacity: 0;
+        #allBooksTextarea {
+            width: 100%; min-height: 100px; margin-top: 10px; font-size: 0.95em;
         }
 
         label {
@@ -125,17 +124,19 @@
             border-color: var(--border-color); border-style: solid; border-width: 1px;
             cursor: not-allowed; color: var(--subtle-text-color); background-color: #e5e1d8; transform: none;
         }
-        #addManualEntryBtn, .btn-vote, #startPollBtn, #revealVotesBtn { background-color: #d4e2d4; }
-        #addManualEntryBtn:hover, .btn-vote:hover, #startPollBtn:hover, #revealVotesBtn:hover { background-color: #e0f0e0; }
-        #addManualEntryBtn:active, .btn-vote:active, #startPollBtn:active, #revealVotesBtn:active { background-color: #c8d8c8; }
+        #addManualEntryBtn, .btn-vote, #startPollBtn, #revealVotesBtn, #copyAllBooksBtn {
+            background-color: #d4e2d4;
+        }
+        #addManualEntryBtn:hover, .btn-vote:hover, #startPollBtn:hover, #revealVotesBtn:hover, #copyAllBooksBtn:hover {
+            background-color: #e0f0e0;
+        }
+        #addManualEntryBtn:active, .btn-vote:active, #startPollBtn:active, #revealVotesBtn:active, #copyAllBooksBtn:active {
+            background-color: #c8d8c8;
+        }
 
         .btn-remove { background-color: #eacccc; }
         .btn-remove:hover { background-color: #f5dddd; }
         .btn-remove:active { background-color: #e0c0c0; }
-
-        .btn-copy-single { background-color: var(--secondary-color); }
-        .btn-copy-single:hover { background-color: var(--secondary-hover-color); }
-        .btn-copy-single:active { background-color: #b88030; }
 
         #closeSearchBtn {
             position: absolute; top: -10px; right: -1px; z-index: 10;
@@ -280,7 +281,7 @@
         #pollShareArea button { font-size: 0.95em; padding: 6px 15px; height: 30px; padding-top: 5px; }
 
         .admin-action-buttons { text-align: center; margin-top: 25px; }
-        #copyInfoStatus, #copyStatus, #startPollStatus {
+        #copyAllStatus, #copyStatus, #startPollStatus {
             min-height: 1.3em; margin-top: 5px; font-size: 0.9em; text-align: center;
         }
 
@@ -292,7 +293,6 @@
         .placeholder-svg path, .placeholder-svg circle { stroke: var(--subtle-text-color); fill: var(--subtle-text-color); }
         .manual-placeholder-svg text { font-family: var(--font-retro); fill: var(--text-color); }
     </style>
-    <!-- Firebase SDK v10 Modular -->
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js';
         import { getDatabase, ref, push, set, onValue, update } from 'https://www.gstatic.com/firebasejs/10.11.0/firebase-database.js';
@@ -311,11 +311,11 @@
         try {
             app = initializeApp(firebaseConfig);
             database = getDatabase(app);
-            console.log("Firebase Initialized Successfully.");
+            console.log("Firebase Initialized Successfully");
         } catch (e) {
             console.error("FIREBASE INIT ERROR:", e);
             document.body.innerHTML = `<div style="padding: 20px; background-color: #fdd; border: 2px solid red; color: black; font-family: monospace;"><h1>FATAL ERROR</h1><p>Could not initialize Firebase. Check the <code>firebaseConfig</code> object.</p><p><strong>Error Details:</strong> ${e.message}</p><p>See console (F12) for more details.</p></div>`;
-            throw new Error("Firebase initialization failed.");
+            throw e;
         }
 
         // DOM Elements
@@ -340,8 +340,9 @@
         const closeSearchBtn = document.getElementById('closeSearchBtn');
         const revealVotesArea = document.getElementById('revealVotesArea');
         const revealVotesBtn = document.getElementById('revealVotesBtn');
-        const copyInfoTextarea = document.getElementById('copyInfoTextarea');
-        const copyInfoStatus = document.getElementById('copyInfoStatus');
+        const copyAllBooksBtn = document.getElementById('copyAllBooksBtn');
+        const allBooksTextarea = document.getElementById('allBooksTextarea');
+        const copyAllStatus = document.getElementById('copyAllStatus');
 
         // State
         let selectedBooks = [];
@@ -373,47 +374,55 @@
                     </svg>`;
         }
 
-        // Utility
+        // Utility Functions
         function debounce(func, delay) {
             return function (...args) {
                 clearTimeout(searchTimeoutId);
                 searchTimeoutId = setTimeout(() => func.apply(this, args), delay);
             };
         }
+
         function getPollIdFromUrl() {
             const params = new URLSearchParams(window.location.search);
             return params.get('pollId');
         }
+
         function sanitizeKey(key) {
             return key.replace(/[.$#[\]/]/g, '_');
         }
+
         function createUniqueKey(prefix = 'key_') {
             return prefix + Date.now() + '_' + Math.random().toString(36).substring(2, 9);
         }
+
         function escapeHtmlBasic(str) {
-            if (typeof str !== 'string') str = String(str);
+            if (typeof str !== 'string') str = String(str || '');
             return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
         }
 
-        // Search & Close Results
+        // Search Functionality
         async function performSearch() {
             const query = searchInput.value.trim();
             searchResultsDiv.innerHTML = '';
-            if (!query) { searchStatusDiv.textContent = ''; return; }
+            if (!query) {
+                searchStatusDiv.textContent = '';
+                return;
+            }
             searchStatusDiv.innerHTML = '<span class="loading">SEARCHING...</span>';
             const url = `https://openlibrary.org/search.json?q=${encodeURIComponent(query)}&limit=6&fields=key,title,author_name,cover_i,number_of_pages_median,isbn`;
             try {
                 const response = await fetch(url);
-                if (!response.ok) throw new Error(`HTTP ERR: ${response.status}`);
+                if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
                 const data = await response.json();
                 searchStatusDiv.textContent = '';
                 displaySearchResults(data.docs);
             } catch (error) {
-                console.error('Search Err:', error);
-                searchStatusDiv.innerHTML = `<span class="error">SEARCH FAILED.</span>`;
+                console.error('Search Error:', error);
+                searchStatusDiv.innerHTML = '<span class="error">SEARCH FAILED</span>';
                 searchResultsDiv.innerHTML = '';
             }
         }
+
         const debouncedSearch = debounce(performSearch, 450);
         searchInput.addEventListener('input', debouncedSearch);
 
@@ -452,11 +461,10 @@
             });
         }
 
-        function closeSearchResults() {
+        closeSearchBtn.addEventListener('click', () => {
             searchResultsDiv.innerHTML = '';
             searchStatusDiv.textContent = '';
-        }
-        closeSearchBtn.addEventListener('click', closeSearchResults);
+        });
 
         // Manual Book Addition
         function addManualEntry() {
@@ -466,12 +474,12 @@
             manualAddStatusDiv.textContent = '';
 
             if (!title) {
-                manualAddStatusDiv.textContent = 'TITLE NEEDED.';
+                manualAddStatusDiv.textContent = 'TITLE NEEDED';
                 manualTitleInput.focus();
                 return;
             }
-            if (link && !link.startsWith('http://') && !link.startsWith('https://')) {
-                manualAddStatusDiv.textContent = 'INVALID URL (use http/https).';
+            if (link && !link.match(/^https?:\/\//)) {
+                manualAddStatusDiv.textContent = 'INVALID URL (use http/https)';
                 manualLinkInput.focus();
                 return;
             }
@@ -479,21 +487,32 @@
                 b.isManual && b.title.toLowerCase() === title.toLowerCase() && b.authors.toLowerCase() === author.toLowerCase()
             );
             if (alreadyExists) {
-                manualAddStatusDiv.textContent = 'DUPLICATE.';
+                manualAddStatusDiv.textContent = 'DUPLICATE';
                 return;
             }
 
             const manualKey = createUniqueKey('manual_');
             const bookData = {
-                key: manualKey, title: title, authors: author,
-                link: link || '', isCustom: true, isFreeform: false, isManual: true,
-                coverId: null, pageCount: 'N/A', isbn: null, votes: 0
+                key: manualKey,
+                title: title,
+                authors: author,
+                link: link || '',
+                isCustom: true,
+                isFreeform: false,
+                isManual: true,
+                coverId: null,
+                pageCount: 'N/A',
+                isbn: null,
+                votes: 0
             };
             selectedBooks.push(bookData);
             displaySelectedBooksAdmin();
-            manualTitleInput.value = ''; manualAuthorInput.value = ''; manualLinkInput.value = '';
+            manualTitleInput.value = '';
+            manualAuthorInput.value = '';
+            manualLinkInput.value = '';
             manualTitleInput.focus();
         }
+
         document.getElementById('manualEntryForm').addEventListener('submit', (e) => {
             e.preventDefault();
             addManualEntry();
@@ -505,10 +524,17 @@
 
             const openLibraryLink = key.startsWith('/works/') ? `https://openlibrary.org${key}` : '';
             const bookData = {
-                key: key, title: title, authors: authors,
-                coverId: coverId || null, pageCount: pageCount, isbn: isbn || null,
-                isCustom: false, isFreeform: false, isManual: false,
-                link: openLibraryLink, votes: 0
+                key: key,
+                title: title,
+                authors: authors,
+                coverId: coverId || null,
+                pageCount: pageCount,
+                isbn: isbn || null,
+                isCustom: false,
+                isFreeform: false,
+                isManual: false,
+                link: openLibraryLink,
+                votes: 0
             };
             selectedBooks.push(bookData);
             displaySelectedBooksAdmin();
@@ -525,13 +551,16 @@
             const bookItemInSearch = searchResultsDiv.querySelector(`.book-item[data-key="${keyToRemove}"]`);
             if (bookItemInSearch) {
                 const btn = bookItemInSearch.querySelector('button');
-                if (btn) { btn.textContent = '+ Add'; btn.disabled = false; }
+                if (btn) {
+                    btn.textContent = '+ Add';
+                    btn.disabled = false;
+                }
                 bookItemInSearch.classList.remove('selected');
             }
         }
 
         function generateLinksHtmlAdmin(book) {
-            if (book.isManual) return `<div class="links"></div>`;
+            if (book.isManual) return `<div class="links">${book.link ? `<a href="${escapeHtmlBasic(book.link)}" target="_blank" rel="noopener">User Link</a>` : ''}</div>`;
             const openLibraryLink = book.link ? `<a href="${book.link}" target="_blank" rel="noopener">OL</a>` : '';
             const goodreadsQuery = book.isbn ? book.isbn : `${book.title} ${book.authors}`;
             const goodreadsSearchLink = `https://www.goodreads.com/search?q=${encodeURIComponent(goodreadsQuery)}`;
@@ -545,10 +574,12 @@
             selectedBooksListDiv.innerHTML = '';
             pollShareArea.style.display = 'none';
             copyStatusDiv.textContent = '';
-            copyInfoStatus.textContent = '';
+            copyAllStatus.textContent = '';
+            allBooksTextarea.value = '';
 
             const hasBooks = selectedBooks.length > 0;
             startPollBtn.disabled = !hasBooks;
+            copyAllBooksBtn.disabled = !hasBooks;
 
             if (!hasBooks) {
                 selectedBooksListDiv.innerHTML = '<p class="placeholder-text"></p>';
@@ -589,40 +620,96 @@
                 }
 
                 const actionsDiv = cardElement.querySelector('.card-actions');
-                const copyButton = document.createElement('button');
-                copyButton.className = 'btn-copy-single';
-                copyButton.textContent = 'Copy book info';
-                copyButton.addEventListener('click', () => copySingleBookInfo(book.key));
                 const removeButton = document.createElement('button');
                 removeButton.className = 'btn-remove';
                 removeButton.textContent = 'Remove';
                 removeButton.addEventListener('click', () => removeBook(book.key));
-                actionsDiv.appendChild(copyButton);
                 actionsDiv.appendChild(removeButton);
 
                 selectedBooksListDiv.appendChild(cardElement);
             });
         }
 
-        // Poll Creation (Firebase)
+        // Copy All Books Functionality
+        function copyAllBooksInfo() {
+            if (selectedBooks.length === 0) {
+                copyAllStatus.textContent = "NO BOOKS TO COPY";
+                copyAllStatus.style.color = "var(--danger-color)";
+                allBooksTextarea.value = '';
+                return;
+            }
+
+            const booksText = selectedBooks.map(book => {
+                const title = book.title || "Unknown Title";
+                const author = book.authors || "Unknown Author";
+                let bestLink = "";
+                if (book.isManual && book.link) {
+                    bestLink = book.link;
+                } else if (book.isbn) {
+                    bestLink = `https://www.goodreads.com/search?q=${encodeURIComponent(book.isbn)}`;
+                } else if (!book.isManual && book.link) {
+                    bestLink = book.link;
+                }
+                return bestLink ? `${title} - ${author}\nLink: ${bestLink}` : `${title} - ${author}`;
+            }).join('\n\n');
+
+            allBooksTextarea.value = booksText;
+            allBooksTextarea.focus();
+            allBooksTextarea.select();
+
+            try {
+                navigator.clipboard.writeText(booksText).then(() => {
+                    copyAllStatus.textContent = "ALL BOOKS COPIED TO CLIPBOARD!";
+                    copyAllStatus.style.color = "var(--success-color)";
+                    setTimeout(() => { copyAllStatus.textContent = ''; }, 3000);
+                }).catch(err => {
+                    console.error('Clipboard Error:', err);
+                    copyAllStatus.textContent = "COPY FAILED - SELECT TEXT MANUALLY";
+                    copyAllStatus.style.color = "var(--danger-color)";
+                });
+            } catch (err) {
+                console.error('Clipboard API not supported:', err);
+                copyAllStatus.textContent = "COPY UNSUPPORTED - SELECT TEXT MANUALLY";
+                copyAllStatus.style.color = "var(--danger-color)";
+            }
+        }
+
+        copyAllBooksBtn.addEventListener('click', copyAllBooksInfo);
+
+        // Poll Creation
         async function startPoll() {
-            if (!database) { startPollStatus.textContent = "DB ERROR"; return; }
-            if (selectedBooks.length === 0) { startPollStatus.textContent = "NEED BOOKS"; return; }
-            startPollStatus.textContent = ""; startPollBtn.disabled = true; startPollBtn.textContent = "Working...";
+            if (!database) {
+                startPollStatus.textContent = "DB ERROR";
+                return;
+            }
+            if (selectedBooks.length === 0) {
+                startPollStatus.textContent = "NEED BOOKS";
+                return;
+            }
+            startPollStatus.textContent = "";
+            startPollBtn.disabled = true;
+            startPollBtn.textContent = "Working...";
             pollShareArea.style.display = 'none';
 
             const pollOptions = {};
-            selectedBooks.forEach((book) => {
+            selectedBooks.forEach(book => {
                 const safeKey = sanitizeKey(book.key);
                 pollOptions[safeKey] = {
-                    title: book.title, author: book.authors, pageCount: book.pageCount,
-                    link: book.link, isbn: book.isbn, coverId: book.coverId,
-                    isCustom: book.isCustom, isManual: book.isManual || false, votes: 0
+                    title: book.title,
+                    author: book.authors,
+                    pageCount: book.pageCount,
+                    link: book.link,
+                    isbn: book.isbn,
+                    coverId: book.coverId,
+                    isCustom: book.isCustom,
+                    isManual: book.isManual || false,
+                    votes: 0
                 };
             });
             const dateStr = new Date().toISOString().split('T')[0];
             const pollTitle = `BOOK VOTE ${dateStr}`;
             const pollData = { title: pollTitle, options: pollOptions, createdAt: Date.now() };
+
             try {
                 const newPollRef = ref(database, 'polls');
                 const newPoll = await push(newPollRef);
@@ -630,16 +717,20 @@
                 currentPollId = newPoll.key;
                 const baseUrl = window.location.href.split('?')[0].split('#')[0];
                 const shareUrl = `${baseUrl}?pollId=${currentPollId}`;
-                pollShareLink.textContent = shareUrl; pollShareLink.href = shareUrl;
+                pollShareLink.textContent = shareUrl;
+                pollShareLink.href = shareUrl;
                 pollShareArea.style.display = 'block';
                 startPollBtn.textContent = "Poll Ready!";
-                copyStatusDiv.textContent = ''; startPollStatus.textContent = "";
+                copyStatusDiv.textContent = '';
+                startPollStatus.textContent = "";
             } catch (error) {
-                console.error("Poll Start Err:", error);
-                startPollStatus.textContent = "POLL ERR.";
-                startPollBtn.disabled = false; startPollBtn.textContent = "MAKE_POLL";
+                console.error("Poll Start Error:", error);
+                startPollStatus.textContent = "POLL ERR";
+                startPollBtn.disabled = false;
+                startPollBtn.textContent = "MAKE_POLL";
             }
         }
+
         startPollBtn.addEventListener('click', startPoll);
 
         function copyPollLink() {
@@ -660,46 +751,8 @@
                 copyStatusDiv.style.color = 'var(--danger-color)';
             }
         }
+
         pollShareArea.querySelector('button').addEventListener('click', copyPollLink);
-
-        function copySingleBookInfo(bookKey) {
-            const book = selectedBooks.find(b => b.key === bookKey);
-            if (!book) {
-                copyInfoStatus.textContent = "BOOK NOT FOUND?";
-                copyInfoStatus.style.color = "var(--danger-color)";
-                return;
-            }
-
-            const title = book.title || "Unknown Title";
-            const author = book.authors || "Unknown Author";
-            let bestLink = "";
-            if (book.isManual && book.link) {
-                bestLink = book.link;
-            } else if (book.isbn) {
-                bestLink = `https://www.goodreads.com/search?q=${encodeURIComponent(book.isbn)}`;
-            } else if (!book.isManual && book.link) {
-                bestLink = book.link;
-            }
-
-            let infoString = `${title} - ${author}\n`;
-            if (bestLink) infoString += `Link: ${bestLink}`;
-
-            try {
-                navigator.clipboard.writeText(infoString.trim()).then(() => {
-                    copyInfoStatus.textContent = `"${title}" INFO COPIED!`;
-                    copyInfoStatus.style.color = "var(--success-color)";
-                    setTimeout(() => { copyInfoStatus.textContent = ''; }, 3000);
-                }).catch(err => {
-                    console.error('Clipboard Error:', err);
-                    copyInfoStatus.textContent = "COPY FAILED";
-                    copyInfoStatus.style.color = 'var(--danger-color)';
-                });
-            } catch (err) {
-                console.error('Clipboard API not supported:', err);
-                copyInfoStatus.textContent = "COPY UNSUPPORTED";
-                copyInfoStatus.style.color = 'var(--danger-color)';
-            }
-        }
 
         // Poll Loading & Display
         function loadPoll(pollId) {
@@ -805,13 +858,14 @@
                 console.error("Firebase poll read failed:", error);
                 pollTitleH1.textContent = "ERROR LOADING POLL";
                 pollOptionsDiv.innerHTML = '<p class="placeholder-text error">[[ Could not load poll data ]]</p>';
-                pollVoteStatusDiv.textContent = "LOAD ERROR"; pollVoteStatusDiv.style.color = "var(--danger-color)";
+                pollVoteStatusDiv.textContent = "LOAD ERROR";
+                pollVoteStatusDiv.style.color = "var(--danger-color)";
                 revealVotesArea.style.display = 'none';
             });
         }
 
         function generateLinksHtmlVoter(book) {
-            if (book.isManual) return `<div class="links"></div>`;
+            if (book.isManual) return `<div class="links">${book.link ? `<a href="${escapeHtmlBasic(book.link)}" target="_blank" rel="noopener">User Link</a>` : ''}</div>`;
             const openLibraryLink = book.link ? `<a href="${book.link}" target="_blank" rel="noopener">OL</a>` : '';
             const goodreadsQuery = book.isbn ? book.isbn : `${book.title} ${book.author}`;
             const goodreadsSearchLink = `https://www.goodreads.com/search?q=${encodeURIComponent(goodreadsQuery)}`;
@@ -823,7 +877,10 @@
 
         // Voting
         async function castVote(bookKey) {
-            if (!database) { pollVoteStatusDiv.textContent = "DB ERROR"; return; }
+            if (!database) {
+                pollVoteStatusDiv.textContent = "DB ERROR";
+                return;
+            }
             if (!currentPollId || votesRevealed) return;
 
             const votedPollKey = `voted_${currentPollId}`;
@@ -835,16 +892,19 @@
                 return;
             }
             disableAllVoteButtons();
-            pollVoteStatusDiv.textContent = "VOTING..."; pollVoteStatusDiv.style.color = "var(--primary-color)";
-            const voteRef = ref(database, `polls/${currentPollId}/options/${bookKey}/votes`);
+            pollVoteStatusDiv.textContent = "VOTING...";
+            pollVoteStatusDiv.style.color = "var(--primary-color)";
             try {
-                await update(ref(database, `polls/${currentPollId}/options/${bookKey}`), { votes: (currentPollData.options[bookKey].votes || 0) + 1 });
-                pollVoteStatusDiv.textContent = "VOTE OK"; pollVoteStatusDiv.style.color = "var(--success-color)";
+                const votePath = `polls/${currentPollId}/options/${bookKey}`;
+                await update(ref(database, votePath), { votes: (currentPollData.options[bookKey].votes || 0) + 1 });
+                pollVoteStatusDiv.textContent = "VOTE OK";
+                pollVoteStatusDiv.style.color = "var(--success-color)";
                 localStorage.setItem(votedPollKey, bookKey);
                 checkIfVoted();
             } catch (error) {
-                console.error("Vote Err:", error);
-                pollVoteStatusDiv.textContent = "VOTE ERR"; pollVoteStatusDiv.style.color = "var(--danger-color)";
+                console.error("Vote Error:", error);
+                pollVoteStatusDiv.textContent = "VOTE ERR";
+                pollVoteStatusDiv.style.color = "var(--danger-color)";
                 checkIfVoted();
             }
             setTimeout(() => { pollVoteStatusDiv.textContent = checkIfVoted() ? "VOTED" : ''; }, 3000);
@@ -875,7 +935,7 @@
             }
         }
 
-        // Reveal Votes Logic
+        // Reveal Votes
         function revealVotes() {
             if (!currentPollData || !currentPollData.options || votesRevealed) return;
             votesRevealed = true;
@@ -889,6 +949,7 @@
                 pollVoteStatusDiv.style.color = "var(--subtle-text-color)";
             }
         }
+
         revealVotesBtn.addEventListener('click', revealVotes);
 
         function applyWinnerHighlighting() {
@@ -912,9 +973,9 @@
         }
 
         // Initialization
-        window.onload = () => {
+        window.addEventListener('load', () => {
             if (!database) {
-                console.error("Database not initialized.");
+                console.error("Database not initialized");
                 document.body.innerHTML = '<div style="color: red; padding: 20px;">Error: Could not connect to database. Please try again later.</div>';
                 return;
             }
@@ -926,9 +987,9 @@
                 pollViewDiv.style.display = 'none';
                 displaySelectedBooksAdmin();
             }
-        };
+        });
 
-        // Listener Cleanup
+        // Cleanup
         window.addEventListener('beforeunload', () => {
             if (pollDataListener && currentPollId) pollDataListener();
         });
@@ -976,11 +1037,12 @@
                     <div id="selectedBooksList">
                         <p class="placeholder-text"></p>
                     </div>
-                    <textarea id="copyInfoTextarea" aria-hidden="true"></textarea>
-                    <div id="copyInfoStatus" class="status-message"></div>
                     <div class="admin-action-buttons">
                         <button id="startPollBtn">MAKE_POLL</button>
+                        <button id="copyAllBooksBtn">COPY ALL BOOKS</button>
                     </div>
+                    <textarea id="allBooksTextarea" placeholder="Click 'Copy All Books' to generate text here..." readonly></textarea>
+                    <div id="copyAllStatus" class="status-message"></div>
                     <div id="startPollStatus" class="status-message error"></div>
                     <div id="pollShareArea" style="display: none;">
                         >> Poll Ready! Share Link:
