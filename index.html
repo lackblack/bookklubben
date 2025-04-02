@@ -733,17 +733,26 @@
             // --- Validation ---
             if (!newTitle) { errorDiv.textContent = "TITLE REQUIRED"; titleInput.focus(); return; }
 
+                      // Function to validate optional URL
             const validateOptionalUrl = (url, inputElement, fieldName) => {
                 if (url) { // Only validate if not empty
                     try {
                         new URL(url);
                         if (!url.match(/^https?:\/\//)) {
                             errorDiv.textContent = `INVALID ${fieldName} URL (use http/https)`;
-                            inputElement?.focus(); return false;
+                            // Replace optional chaining with explicit check
+                            if (inputElement) {
+                                inputElement.focus();
+                            }
+                            return false;
                         }
                     } catch (_) {
                         errorDiv.textContent = `INVALID ${fieldName} URL FORMAT`;
-                        inputElement?.focus(); return false;
+                         // Replace optional chaining with explicit check
+                        if (inputElement) {
+                            inputElement.focus();
+                        }
+                        return false;
                     }
                 }
                 return true; // Valid (or empty)
@@ -1360,7 +1369,7 @@
                 <h2>Selected books</h2>
                 <div class="section-content">
                     <div id="selectedBooksList">
-                        <p class="placeholder-text">[[ Add books using search or manual entry above ]]</p>
+                        <p class="placeholder-text"></p>
                     </div>
                     <div class="admin-action-buttons">
                         <button id="startPollBtn" disabled>MAKE_POLL</button>
