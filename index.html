@@ -563,7 +563,7 @@
         pollShareArea.style.display = 'none'; copyStatusDiv.textContent = '';
 
         if (selectedBooks.length === 0) {
-            selectedBooksListDiv.innerHTML = '<p class="placeholder-text">[[ No Books Selected ]]</p>';
+            selectedBooksListDiv.innerHTML = '<p class="placeholder-text"></p>';
             startPollBtn.disabled = true; return;
         }
 
