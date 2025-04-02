@@ -274,10 +274,50 @@
             font-size: 0.85em; line-height: 1; border: 1px solid var(--success-hover-color);
         }
 
-        .status-message { text-align: center; padding: 5px 0; color: var(--subtle-text-color); font-size: 0.95em; min-height: 1.4em; text-transform: uppercase; }
+        .status-message { 
+            text-align: center; 
+            padding: 8px 0; 
+            color: var(--subtle-text-color); 
+            font-size: 1.2em; 
+            min-height: 1.6em; 
+            text-transform: uppercase; 
+            font-weight: normal;
+            letter-spacing: 0.05em;
+        }
         .loading { color: var(--secondary-color); }
         .error { color: var(--danger-color); }
         .placeholder-text { color: var(--subtle-text-color); text-align: center; padding: 15px 0; font-size: 0.95em; line-height: 1.4; }
+
+        /* Loading animation styles */
+        @keyframes dots-animation {
+            0% { content: '.'; }
+            33% { content: '..'; }
+            66% { content: '...'; }
+            100% { content: '.'; }
+        }
+        .loading-dots::after {
+            content: '.';
+            display: inline-block;
+            width: 20px;
+            text-align: left;
+            animation: dots-animation 1.2s infinite steps(1);
+        }
+        .search-animation-container {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-left: 5px;
+        }
+        @keyframes book-search {
+            0% { transform: translateY(0); }
+            50% { transform: translateY(-3px); }
+            100% { transform: translateY(0); }
+        }
+        .search-icon {
+            display: inline-block;
+            margin-right: 8px;
+            animation: book-search 1.2s infinite ease-in-out;
+        }
 
         #pollShareArea {
             margin-top: 20px; padding: 15px; background-color: rgba(0,0,0,0.03);
@@ -511,7 +551,12 @@
                 searchStatusDiv.textContent = '';
                 return;
             }
-            searchStatusDiv.innerHTML = '<span class="loading">SEARCHING...</span>';
+            searchStatusDiv.innerHTML = `
+                <span class="loading">
+                    <span class="search-icon">📚</span>
+                    SEARCHING<span class="loading-dots"></span>
+                </span>
+            `;
             const url = `https://openlibrary.org/search.json?q=${encodeURIComponent(query)}&limit=6&fields=key,title,author_name,cover_i,number_of_pages_median,isbn`;
             try {
                 const response = await fetch(url);
@@ -521,7 +566,7 @@
                 displaySearchResults(data.docs);
             } catch (error) {
                 console.error('Search Error:', error);
-                searchStatusDiv.innerHTML = '<span class="error">SEARCH FAILED</span>';
+                searchStatusDiv.innerHTML = '<span class="error">⚠️ SEARCH FAILED</span>';
                 searchResultsDiv.innerHTML = '';
             }
         }
